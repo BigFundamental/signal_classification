@@ -7,8 +7,10 @@ Major Entry of signal diagnosis module
 import os, sys
 import numpy as np
 import pandas as pd
+import logging
 from classifier import Classifier
 
+logger = logging.getLogger('server')
 class SignalMgr(object):
    """
    Signal process entry class
@@ -20,7 +22,7 @@ class SignalMgr(object):
            'EDGE_THRESHOLD_HIGH': 0.2,
            'EDGE_THRESHOLD_LOW': 0.02,
            'PEAK_MISSING_RATIO': 0.25,
-           'WITH_HEADER': True,
+           'WITH_HEADER': False,
            'COLUMN_NUM': 1,
            'SAMPLING_DT': 0.00002
    }
@@ -32,7 +34,7 @@ class SignalMgr(object):
        """
        # step1: read raw signals
        dt, raw_signals = self.parse_signals_from_file(file_path)
-
+       logger.debug('dt:%s raw_signals:%s' % (str(dt), str(raw_signals)))
        # step2: normalize input signals using guassian normalization
        #        easing later threshold variance between different channels
        normalized_signals = self.normalize_signals(raw_signals)
@@ -86,13 +88,19 @@ class SignalMgr(object):
            header_lines = header_params['lineno']
        else:
            header_lines = 0
-       print "header_Lines:%d" % (header_lines) 
+       
        column_index = range(0, SignalMgr.signalParams['COLUMN_NUM'])
        dt = np.array([])
        raw_signals = np.array([])
        if SignalMgr.signalParams['COLUMN_NUM'] == 1:
+           logger.debug(str(raw_signals))
+           logger.debug(str(header_lines))
+           logger.debug(str(column_index))
+           logger.debug("path:[%s]" % (fpath))
            raw_signals = np.genfromtxt(fpath, unpack=True, skip_header=header_lines, dtype=np.float32, delimiter=',', usecols=column_index)
-           dt = np.arange(0, len(raw_signals * SignalMgr.signalParams['SAMPLING_DT']), SignalMgr.signalParams['SAMPLING_DT'])
+           #raw_signals = np.genfromtxt('/Users/changkong/ML/Signal Classification/exp/a.txt', unpack=True, skip_header=header_lines, dtype=np.float32, delimiter=',', usecols=column_index)
+           logger.debug(str(raw_signals))
+           dt = np.arange(0, len(raw_signals) * SignalMgr.signalParams['SAMPLING_DT'], SignalMgr.signalParams['SAMPLING_DT'])
        elif SignalMgr.signalParams['COLUMN_NUM'] == 2:
            dt, raw_signals = np.genfromtxt(fpath, unpack=True, skip_header=header_lines, dtype=np.float32, delimiter=',', usecols=column_index)
        return (dt, raw_signals)

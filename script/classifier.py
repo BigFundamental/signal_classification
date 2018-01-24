@@ -4,6 +4,9 @@ import pandas as pd
 import numpy as np
 from filter import Filter
 from feature_extractor import FeatureExtractor
+import logging
+
+logger = logging.getLogger('server')
 
 class Classifier(object):
     """
@@ -41,6 +44,9 @@ class Classifier(object):
         retParam = dict()
         retParam['stat'] = result
         retParam['reason'] = reason
+
+        # TODO: speed
+        retParam['speed'] = 0
         return retParam
 
     def calcRotationSpeed(self, signals, params):

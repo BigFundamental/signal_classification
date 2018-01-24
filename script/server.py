@@ -12,6 +12,13 @@ from urllib import unquote
 import threading
 import json
 import traceback
+import logging
+from signal_manager import SignalMgr
+
+logger = logging.getLogger('server')
+logger.setLevel(logging.DEBUG)
+file_handler = logging.FileHandler('server.log')
+logger.addHandler(file_handler)
 
 """
 https://pymotw.com/2/BaseHTTPServer/
@@ -20,13 +27,14 @@ class Handler(BaseHTTPRequestHandler):
 
     def get_params_(self):
         query_components = parse_qs(urlparse(unquote(self.path)).query)
+        logger.debug('raw GET params: [%s]' % unquote(self.path))
+        logger.debug('request params: %s' % str(query_components))
         return query_components
 
     def do_GET(self):
         self.send_response(200)
         self.send_header('Content-Type', 'application/json')
         self.end_headers()
-        #message =  threading.currentThread().getName()
         jsonRetParam = dict()
         jsonRetParam['errorCode'] = 0
         jsonRetParam['resultCode'] = 0
@@ -34,8 +42,8 @@ class Handler(BaseHTTPRequestHandler):
         try:
             params = self.get_params_()
             signal_mgr = SignalMgr()
-            pred_ret = signal_mgr.process(params['filepath'])
-            jsonRetParam['resultCode'] = pred_ret['signal_type']
+            pred_ret = signal_mgr.process(params['filepath'][0])
+            jsonRetParam['resultCode'] = pred_ret['stat']
             jsonRetParam['speed'] = pred_ret['speed']
         except:
             traceback.print_exc()
