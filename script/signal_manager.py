@@ -11,6 +11,7 @@ import logging
 from classifier import Classifier
 
 logger = logging.getLogger('server')
+
 class SignalMgr(object):
    """
    Signal process entry class
@@ -22,6 +23,10 @@ class SignalMgr(object):
            'EDGE_THRESHOLD_HIGH': 0.2,
            'EDGE_THRESHOLD_LOW': 0.02,
            'PEAK_MISSING_RATIO': 0.25,
+           'SHOULDER_UNSYMANTRIC_RATIO': 0.25,
+           'SHOULDER_HEIGHT_VARIANCE_THRESHOLD': 0.01,
+           'SHOULDER_SYMMENTRIC_MEAN_THRESHOLD': 3,
+           'SHOULDER_SYMMENTRIC_VARIANCE_THRESHOLD': 2.4,
            'WITH_HEADER': False,
            'COLUMN_NUM': 1,
            'SAMPLING_DT': 0.00002
@@ -98,7 +103,6 @@ class SignalMgr(object):
            logger.debug(str(column_index))
            logger.debug("path:[%s]" % (fpath))
            raw_signals = np.genfromtxt(fpath, unpack=True, skip_header=header_lines, dtype=np.float32, delimiter=',', usecols=column_index)
-           #raw_signals = np.genfromtxt('/Users/changkong/ML/Signal Classification/exp/a.txt', unpack=True, skip_header=header_lines, dtype=np.float32, delimiter=',', usecols=column_index)
            logger.debug(str(raw_signals))
            dt = np.arange(0, len(raw_signals) * SignalMgr.signalParams['SAMPLING_DT'], SignalMgr.signalParams['SAMPLING_DT'])
        elif SignalMgr.signalParams['COLUMN_NUM'] == 2:
