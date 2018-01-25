@@ -28,21 +28,6 @@ class FeatureExtractor(object):
         std = np.std(signals)
         return (signals - mean) / std
 
-   # def 1stDerivative(self, signals):
-   #     """
-   #     caculate derivative for signals
-   #     1-dimensional derivative is defined as
-   #     f'(x) = f[x] - f[x - 1]
-   #     """
-   #     if len(signals) == 0:
-   #         return np.zeros(1)
-   #     
-   #     # first derivative should be 0.0
-   #     derivatives = np.zero(len(signals))
-   #     for i in xrange(1, len(signals)):
-   #         derivatives[i] = signals[i] - signals[i - 1]
-   #     return derivatives
-   # 
     def peakPointers(self, signals, window_size, threshold):
         """
         locates & count all peak pointers
@@ -170,7 +155,7 @@ class FeatureExtractor(object):
         #norm_signals = self.guassianNormalize(signals)
         # medfilt to remove sharp changes, smooth data for later edge detection
         med_signals = Filter.medfilter(signals, 21)
-        plt.plot(med_signals)
+        #plt.plot(med_signals)
         return self.detectEdges(med_signals, window_size, threshold, 1)
 
     def downwardsEdges(self, signals, window_size, threshold):

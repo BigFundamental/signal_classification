@@ -18,11 +18,11 @@ class SignalMgr(object):
    """
    signalParams = {
            'PEAK_WINDOW_SIZE': 9,
-           'PEAK_THRESHOLD': 0.2,
+           'PEAK_THRESHOLD': 0.25,
+           'PEAK_MISSING_RATIO': 0.2,
            'EDGE_WINDOW_SIZE': 7,
            'EDGE_THRESHOLD_HIGH': 0.2,
            'EDGE_THRESHOLD_LOW': 0.02,
-           'PEAK_MISSING_RATIO': 0.25,
            'SHOULDER_UNSYMANTRIC_RATIO': 0.25,
            'SHOULDER_HEIGHT_VARIANCE_THRESHOLD': 0.01,
            'SHOULDER_SYMMENTRIC_MEAN_THRESHOLD': 3,

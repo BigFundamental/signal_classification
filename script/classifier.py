@@ -48,9 +48,21 @@ class Classifier(object):
         retParam['stat'] = result
         retParam['reason'] = reason
 
-        # TODO: speed
-        retParam['speed'] = 0
+        # calculate speed
+        retParam['speed'] = self.calcSpeed(signals, params)
         return retParam
+
+    def calcSpeed(self, signals, params):
+        """
+        round per minute
+        dt * edge_pairs
+        """
+        sampling_dt = params['SAMPLING_DT'] # second
+        total_secs = len(signals) * sampling_dt
+        cycle_num = (len(self.upwardsEdges) + len(self.downwardsEdges)) / 2.0
+        rpm = cycle_num * 1.0 / total_secs * 60.0
+        print "total_time:%.7lf cycle_num:%d" % (total_secs, cycle_num)
+        return rpm
 
     def calcRotationSpeed(self, signals, params):
         """
@@ -95,11 +107,11 @@ class Classifier(object):
         paired_edges = list()
         up_idx = 0
         down_idx = 0
-        print "upwardsEdges: %d downwardsEdges: %d" % (len(self.upwardsEdges), len(self.downwardsEdges))
+        logger.debug("upwardsEdges: %d downwardsEdges: %d" % (len(self.upwardsEdges), len(self.downwardsEdges)))
         while up_idx < len(self.upwardsEdges) and down_idx < len(self.downwardsEdges):
            up = self.upwardsEdges[up_idx]
            down = self.downwardsEdges[down_idx]
-           print "up_idx:%d down_idx:%d up:%s down:%s" % (up_idx, down_idx, str(up), str(down))
+           #print "up_idx:%d down_idx:%d up:%s down:%s" % (up_idx, down_idx, str(up), str(down))
            if up[1] > down[0]:
                down_idx += 1
                continue
@@ -119,6 +131,7 @@ class Classifier(object):
         downward_edge_num = len(self.downwardsEdges)
         expect_num = (up_edge_num + downward_edge_num) / 2.0
         missing_ratio = abs(expect_num - peak_num) * 1.0 / expect_num
+        #print "peak_num:%d up_edge_num:%d downward_edge_num:%d peaks:%s" % (peak_num, up_edge_num, downward_edge_num, str(self.peakLocations))
         return missing_ratio >= _peak_missing_ratio
 
     def isShoulderWidthAbnormal(self, params):
@@ -167,8 +180,8 @@ class Classifier(object):
             else:
                 tdelta_cnt +=1
 
-        print "height mean: %.2lf height variance: %.2lf" % (global_height_mean, global_height_std)
-        print "delta_cnt: %d ddelta_cnt: %d tdelta_cnt: %d" % (delta_cnt, ddelta_cnt, tdelta_cnt)
+        #print "height mean: %.2lf height variance: %.2lf" % (global_height_mean, global_height_std)
+        #print "delta_cnt: %d ddelta_cnt: %d tdelta_cnt: %d" % (delta_cnt, ddelta_cnt, tdelta_cnt)
         return True
 
     def standardGuassianNormalize(self, input_val):
@@ -184,11 +197,11 @@ class Classifier(object):
         up_idx = 0
         down_idx = 0
         shoulder_diff = list()
-        print "upwardsEdges: %d downwardsEdges: %d" % (len(self.upwardsEdges), len(self.downwardsEdges))
+        #print "upwardsEdges: %d downwardsEdges: %d" % (len(self.upwardsEdges), len(self.downwardsEdges))
         while up_idx < len(self.upwardsEdges) and down_idx < len(self.downwardsEdges):
            up = self.upwardsEdges[up_idx]
            down = self.downwardsEdges[down_idx]
-           print "up_idx:%d down_idx:%d up:%s down:%s" % (up_idx, down_idx, str(up), str(down))
+           #print "up_idx:%d down_idx:%d up:%s down:%s" % (up_idx, down_idx, str(up), str(down))
            if up[1] > down[0]:
                down_idx += 1
                continue
@@ -200,7 +213,7 @@ class Classifier(object):
         
         #normalize shoulder diff
         #shoulder_diff = np.array(self.standardGuassianNormalize(shoulder_diff))
-        print "diff_array: %s mean: %.2lf dev: %.2lf" % (str(shoulder_diff), np.mean(shoulder_diff), np.std(shoulder_diff))
+        #print "diff_array: %s mean: %.2lf dev: %.2lf" % (str(shoulder_diff), np.mean(shoulder_diff), np.std(shoulder_diff))
         mean = np.mean(shoulder_diff)
         delta = np.std(shoulder_diff)
         shoulder_diff = (np.array(shoulder_diff) - np.mean(shoulder_diff)) / np.std(shoulder_diff)
@@ -223,7 +236,7 @@ class Classifier(object):
             if diff >= 3 * delta:
                 delta_tripple_cnt += 1
 
-        print "diff_array: %s delta_within: %d 1dev: %d 2dev: %d 3dev: %d" % (str(shoulder_diff), delta_within, delta_cnt, delta_double_cnt, delta_tripple_cnt)
+       # print "diff_array: %s delta_within: %d 1dev: %d 2dev: %d 3dev: %d" % (str(shoulder_diff), delta_within, delta_cnt, delta_double_cnt, delta_tripple_cnt)
        # unsymmentric_ratio = unsymmetric_cnt * 1.0 / ((len(self.upwardsEdges) + len(self.downwardsEdges)) / 2.0)
        # print "unsymmentric_ratio: %.5lf" % (unsymmentric_ratio)
        # if unsymmentric_ratio >= _unsymmetric_ratio:
@@ -239,15 +252,7 @@ class Classifier(object):
         if self.isLackOfPeaks(params):
             isFlawSignal = True
             flawType = Classifier.FLAW_TYPE_MISSING_PEAK 
-
-        #if self.isShoulderSymantric(params):
-        #    isFlawSignal = True
-        #    flawType = Classifier.FLAW_TYPE_UNSYMMENTRIC_SHOULDER
-
-       # if self.isShoulderHeightNormal(signals, params):
-       #     isFlawSignal = True
-       #     flawType = Classifier.FLAW_TYPE_HEIGHT_VARIANCE
-        if self.isShoulderWidthAbnormal(params):
+        elif self.isShoulderWidthAbnormal(params):
             isFlawSignal = True
             flawType = Classifier.FLAW_TYPE_WIDTH_VARIANCE
 
