@@ -60,15 +60,9 @@ class Classifier(object):
         sampling_dt = params['SAMPLING_DT'] # second
         total_secs = len(signals) * sampling_dt
         cycle_num = (len(self.upwardsEdges) + len(self.downwardsEdges)) / 2.0
-        rpm = cycle_num * 1.0 / total_secs * 60.0
+        rpm = cycle_num / 4.0 / total_secs * 60.0
         print "total_time:%.7lf cycle_num:%d" % (total_secs, cycle_num)
         return rpm
-
-    def calcRotationSpeed(self, signals, params):
-        """
-        return predict real speed of current signals
-        """
-        return 0
 
     #### get signal features ####
     def getPeakLoc_(self, signals, params):
