@@ -32,7 +32,7 @@ class SignalMgr(object):
            'SAMPLING_DT': 0.00002
    }
 
-   def process(self, file_path):
+   def process(self, file_path, request_param = dict()):
        """
        httpserver process callback entry function
        dict result for outer server
@@ -46,7 +46,7 @@ class SignalMgr(object):
 
        # step3: using classifier to detects potential signals with pitfalls
        classifier = Classifier()
-       return classifier.predict(normalized_signals, SignalMgr.signalParams)
+       return classifier.predict(normalized_signals, SignalMgr.signalParams, request_param)
    
    def get_header_(self, fpath):
        """

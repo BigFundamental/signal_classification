@@ -17,27 +17,31 @@ class Classifier(object):
     FLAW_TYPE_UNSYMMENTRIC_SHOULDER = 2
     FLAW_TYPE_HEIGHT_VARIANCE = 3
     FLAW_TYPE_WIDTH_VARIANCE = 4
+    ERR_RET_PARAM = dict({'stat': 1, 'reason': 0, 'speed': 0})
+
     def __init__(self):
         self.featureExtractor = FeatureExtractor()
 
 
-    def predict(self, signals, params):
+    def predict(self, signals, params, request_params = dict()):
         """
         return 0 if signal is normal, otherwise -1
         """
-        return self.predictWithReason(signals, params)
+        return self.predictWithReason(signals, params, request_params)
 
-    def predictWithReason(self, signals, params):
+    def predictWithReason(self, signals, params, request_params = dict()):
         """
         return a tupple consists of status and reasons
         """
         signal_length = len(signals)
-       
+        
+        if signal_length == 0:
+            return Classifier.ERR_RET_PARAM
+
         # get all peak points
         self.peakLocations = self.getPeakLoc_(signals, params)
         # get all upwards edges
         self.upwardsEdges = self.getUpEdges_(signals, params)
-
         # get all downwards edges
         self.downwardsEdges = self.getDownEdges_(signals, params)
 
@@ -48,20 +52,26 @@ class Classifier(object):
         retParam['stat'] = result
         retParam['reason'] = reason
 
-        # calculate speed
-        retParam['speed'] = self.calcSpeed(signals, params)
+        if result != 0:
+            retParam['speed'] = 0
+        else:
+            # calculate speed
+            logger.debug('request_params: %s' % str(request_params))
+            samplerate = request_params.get('samplerate', [params['SAMPLING_DT']])[0]
+            #samplerate = request_params.get('samplerate', params['SAMPLING_DT']) 
+            retParam['speed'] = self.calcSpeed(signals, params, float(samplerate))
         return retParam
 
-    def calcSpeed(self, signals, params):
+    def calcSpeed(self, signals, params, sampling_dt):
         """
         round per minute
         dt * edge_pairs
         """
-        sampling_dt = params['SAMPLING_DT'] # second
+        #sampling_dt = params['SAMPLING_DT'] # second
         total_secs = len(signals) * sampling_dt
         cycle_num = (len(self.upwardsEdges) + len(self.downwardsEdges)) / 2.0
         rpm = cycle_num / 4.0 / total_secs * 60.0
-        print "total_time:%.7lf cycle_num:%d" % (total_secs, cycle_num)
+        #print "total_time:%.7lf cycle_num:%d" % (total_secs, cycle_num)
         return rpm
 
     #### get signal features ####
@@ -124,6 +134,9 @@ class Classifier(object):
         up_edge_num = len(self.upwardsEdges)
         downward_edge_num = len(self.downwardsEdges)
         expect_num = (up_edge_num + downward_edge_num) / 2.0
+        
+        if 0 == peak_num or 0 == up_edge_num or 0 == downward_edge_num or 0 == expect_num:
+            return True
         missing_ratio = abs(expect_num - peak_num) * 1.0 / expect_num
         #print "peak_num:%d up_edge_num:%d downward_edge_num:%d peaks:%s" % (peak_num, up_edge_num, downward_edge_num, str(self.peakLocations))
         return missing_ratio >= _peak_missing_ratio

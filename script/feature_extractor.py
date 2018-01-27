@@ -57,7 +57,7 @@ class FeatureExtractor(object):
         """
         merge adjacent segments, because of the the step-wise detections
         """
-        if len(edges) == 1:
+        if len(edges) <= 1:
             return edges
         merged_edges = list()
         merged_edges.append(edges[0])
