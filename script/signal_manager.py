@@ -38,7 +38,7 @@ class SignalMgr(object):
        dict result for outer server
        """
        # step1: read raw signals
-       dt, raw_signals = self.parse_signals_from_file(file_path)
+       dt, raw_signals = self.parse_signals_from_file(file_path, request_param.get('skip_row', 0))
        logger.debug('dt:%s raw_signals:%s' % (str(dt), str(raw_signals)))
        # step2: normalize input signals using guassian normalization
        #        easing later threshold variance between different channels
@@ -82,7 +82,7 @@ class SignalMgr(object):
        delta = np.std(signals)
        return (signals - mean) / delta
    
-   def parse_signals_from_file(self, fpath):
+   def parse_signals_from_file(self, fpath, skip_rows = 0):
        """
        parse signals from fhandler
        expect schema:
@@ -93,7 +93,8 @@ class SignalMgr(object):
            header_lines = header_params['lineno']
        else:
            header_lines = 0
-       
+      
+       header_lines += skip_rows
        column_index = range(0, SignalMgr.signalParams['COLUMN_NUM'])
        dt = np.array([])
        raw_signals = np.array([])

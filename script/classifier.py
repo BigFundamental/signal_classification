@@ -22,7 +22,6 @@ class Classifier(object):
     def __init__(self):
         self.featureExtractor = FeatureExtractor()
 
-
     def predict(self, signals, params, request_params = dict()):
         """
         return 0 if signal is normal, otherwise -1
