@@ -18,19 +18,27 @@ class SignalMgr(object):
    """
    signalParams = {
            'PEAK_WINDOW_SIZE': 9,
-           'PEAK_THRESHOLD': 0.25,
-           'PEAK_MISSING_RATIO': 0.2,
+           'PEAK_THRESHOLD': 0.5,
+           'PEAK_MISSING_RATIO': 0.25,
            'EDGE_WINDOW_SIZE': 7,
-           'EDGE_THRESHOLD_HIGH': 0.2,
-           'EDGE_THRESHOLD_LOW': 0.02,
-           'SHOULDER_UNSYMANTRIC_RATIO': 0.25,
-           'SHOULDER_HEIGHT_VARIANCE_THRESHOLD': 0.01,
+           'EDGE_THRESHOLD_HIGH': 1.0,
+           'EDGE_THRESHOLD_LOW': 0.05,
+           'SHOULDER_UNSYMMETRIC_RATIO': 0.25,
+           'SHOULDER_UNSYMMETRIC_VAR':0.42,
+           'SHOULDER_UNSYMMETRIC_THRESHOLD': 0.01,
+           'SHOULDER_HEIGHT_VARIANCE_THRESHOLD': 0.2,
            'SHOULDER_SYMMENTRIC_MEAN_THRESHOLD': 3,
            'SHOULDER_SYMMENTRIC_VARIANCE_THRESHOLD': 2.4,
+           'DOWN_PEAK_APPEARING_RATIO': 0.25,
+           'DOWN_PEAK_WINDOW_SIZE': 9,
+           'DOWN_PEAK_THESHOLD': -1,
            'WITH_HEADER': False,
            'COLUMN_NUM': 1,
-           'SAMPLING_DT': 0.00002
+           'SAMPLING_DT': 0.00004
    }
+
+   def __init__(self):
+       self.debug_info = dict()
 
    def process(self, file_path, request_param = dict()):
        """
@@ -43,11 +51,11 @@ class SignalMgr(object):
        # step2: normalize input signals using guassian normalization
        #        easing later threshold variance between different channels
        normalized_signals = self.normalize_signals(raw_signals)
-
        # step3: using classifier to detects potential signals with pitfalls
        classifier = Classifier()
+       
        return classifier.predict(normalized_signals, SignalMgr.signalParams, request_param)
-   
+  
    def get_header_(self, fpath):
        """
        parse & extract headers

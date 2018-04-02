@@ -18,9 +18,9 @@ class Filter(object):
         pass
 
     @classmethod
-    def nms(self, signals, window_size = 5):
+    def nms(self, signals, window_size = 5, minimun=False):
         """
-        non max supress filter.
+        non max/minimun supress filter.
         only filter local maximun points
         window_size should be odd
         """
@@ -30,8 +30,12 @@ class Filter(object):
         for i in xrange(0, len(signals)):
             left = max(0, i - step)
             right = min(len(signals), i + step)
-            if np.max(signals[left:right]) > signals[i]:
+            target = np.argmax(signals[left:right]) + left
+            if minimun == True:
+                target = np.argmin(signals[left:right]) + left
+            if target != i:
                 signals[i] = 0
+            
         return signals
 
     @classmethod

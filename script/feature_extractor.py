@@ -28,9 +28,9 @@ class FeatureExtractor(object):
         std = np.std(signals)
         return (signals - mean) / std
 
-    def peakPointers(self, signals, window_size, threshold):
+    def peakPointers(self, signals, window_size, threshold, reverse=False):
         """
-        locates & count all peak pointers
+        locates & count all peak / bottom pointers
         return a tuple (num_of_peaks, array_of_peak_indices)
         """
         # first normalize signals
@@ -42,13 +42,17 @@ class FeatureExtractor(object):
 
         # caculate residual, only reserve candidate peaks
         peak_candidates = signals - med_filterd_signals
-
+#        plt.plot(peak_candidates)
         # non-max-suppress, reserve one highest pointers for peaks
-        peaks = Filter.nms(peak_candidates, window_size)
+        peaks = Filter.nms(peak_candidates, window_size, reverse)
+#        plt.plot(peaks)
 
         # threshold check, remove suspecious peaks
         idx = np.arange(0, len(signals))
-        masks = peaks > threshold
+        if not reverse:
+            masks = peaks > threshold
+        else:
+            masks = peaks < threshold
         peak_idx = idx[masks]
         num_of_peaks = masks.sum()
         return peak_idx
@@ -154,7 +158,7 @@ class FeatureExtractor(object):
         # using medfilter to remove all noise / peak points
         #norm_signals = self.guassianNormalize(signals)
         # medfilt to remove sharp changes, smooth data for later edge detection
-        med_signals = Filter.medfilter(signals, 21)
+        med_signals = Filter.medfilter(signals, 9)
         #plt.plot(med_signals)
         return self.detectEdges(med_signals, window_size, threshold, 1)
 
@@ -166,5 +170,5 @@ class FeatureExtractor(object):
         #norm_signals = self.guassianNormalize(signals)
 
         # medfilt to remove sharp changes, smooth data for later edge detection
-        med_signals = Filter.medfilter(signals, 21)
+        med_signals = Filter.medfilter(signals, 9)
         return self.detectEdges(med_signals, window_size, threshold, -1)
