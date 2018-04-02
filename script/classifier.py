@@ -77,7 +77,7 @@ class Classifier(object):
             retParam['debug']['down_edges'] = self.downwardsEdges
             retParam['debug']['down_peaks'] = self.downPeakLocations
             retParam['debug']['shoulder_height'] = self.shoulder_mean_heights
-            retParam['debug']['height_delta'] = self.edge_deltas
+            #retParam['debug']['height_delta'] = self.edge_deltas
         return retParam
 
     def calcSpeed(self, signals, params, sampling_dt):
@@ -262,9 +262,9 @@ class Classifier(object):
         if self.isShoulderHeightAbnormal(signals, params):
             isFlawSignal = True
             flawType = Classifier.FLAW_TYPE_HEIGHT_VARIANCE
-        if self.isShoulderNotSymmetric(signals, params):
-            isFlawSignal = True
-            flawType = Classifier.FLAW_TYPE_UNSYMMENTRIC_SHOULDER
+       # if self.isShoulderNotSymmetric(signals, params):
+       #     isFlawSignal = True
+       #     flawType = Classifier.FLAW_TYPE_UNSYMMENTRIC_SHOULDER
         if isFlawSignal:
             result = 1
         else:
