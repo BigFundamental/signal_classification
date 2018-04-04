@@ -64,7 +64,7 @@ class Classifier(object):
             samplerate = request_params.get('samplerate', [params['SAMPLING_DT']])[0]
             #samplerate = request_params.get('samplerate', params['SAMPLING_DT']) 
             retParam['speed'] = self.calcSpeed(signals, params, float(samplerate))
-            if retParam['speed'] < 12300 or retParam['speed'] > 15800:
+            if retParam['speed'] < 12300 or retParam['speed'] > 15500:
                 retParam['stat']= 1
                 retParam['reason'] = Classifier.FLAW_TYPE_SPEED_INVALID
 
