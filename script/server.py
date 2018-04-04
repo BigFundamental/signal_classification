@@ -45,10 +45,12 @@ class Handler(BaseHTTPRequestHandler):
             pred_ret = signal_mgr.process(params['filepath'][0], params)
             jsonRetParam['resultCode'] = pred_ret['stat']
             jsonRetParam['speed'] = pred_ret['speed']
+            jsonRetParam['reason'] = pred_ret['reason']
         except:
             traceback.print_exc()
             jsonRetParam['errorCode'] = 1
             jsonRetParam['speed'] = 0
+            jsonRetParam['reason'] = -1
         self.wfile.write(json.dumps(jsonRetParam))
         return
 
