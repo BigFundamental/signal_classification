@@ -5,6 +5,7 @@ import numpy as np
 from filter import Filter
 from feature_extractor import FeatureExtractor
 import logging
+from sklearn.externals import joblib
 
 logger = logging.getLogger('server')
 
@@ -24,12 +25,59 @@ class Classifier(object):
     def __init__(self):
         self.featureExtractor = FeatureExtractor()
         self.features = dict()
+        self.model = joblib.load("./model/ada.pkl")
 
     def predict(self, signals, params, request_params = dict()):
         """
         return 0 if signal is normal, otherwise -1
         """
-        return self.predictWithReason(signals, params, request_params)
+        #return self.predictWithReason(signals, params, request_params)
+        return self.predictWithModel(signals, params, request_params)
+
+    def predictWithModel(self, signals, params, request_params = dict()):
+        f = self.get_features(signals, params, request_params)
+        self.upwardsEdges = f['up_edges']
+        self.downwardsEdges = f['down_edges']
+        feature = [f['peaks_num'], f['up_edges_num'], f['down_edges_num'], f['down_peaks_num'], f['peak_edge_ratio'], f['down_peak_edge_ratio']]
+        result = self.model.predict(feature)[0]
+        
+        retParam = dict()
+        retParam['stat'] = result
+        retParam['reason'] = -1
+
+        if result != 0:
+            retParam['speed'] = 0
+        else:
+            # calculate speed
+            samplerate = request_params.get('samplerate', [params['SAMPLING_DT']])[0]
+            #samplerate = request_params.get('samplerate', params['SAMPLING_DT']) 
+            retParam['speed'] = self.calcSpeed(signals, params, float(samplerate))
+            if retParam['speed'] < 12300 or retParam['speed'] > 15500:
+                retParam['stat']= 1
+                retParam['reason'] = Classifier.FLAW_TYPE_SPEED_INVALID
+        return retParam
+
+    def get_features(self, signals, params, request_params = dict()):
+        """
+        calculate features dicts
+        """
+        signal_length = len(signals)
+        feature_dict = dict()
+        if 0 == signal_length:
+            return feature_dict
+
+        # get peaks / edges
+        feature_dict['peaks'] = self.getPeakLoc_(signals, params)
+        feature_dict['down_peaks'] = self.getDownPeakLoc_(signals, params)
+        feature_dict['up_edges'] = self.getUpEdges_(signals, params)
+        feature_dict['down_edges'] = self.getDownEdges_(signals, params)
+        feature_dict['peaks_num'] = len(feature_dict['peaks'])
+        feature_dict['down_peaks_num'] = len(feature_dict['down_peaks'])
+        feature_dict['up_edges_num'] = len(feature_dict['up_edges'])
+        feature_dict['down_edges_num'] = len(feature_dict['down_edges'])
+        feature_dict['peak_edge_ratio'] = feature_dict['peaks_num'] * 1.0 / ((feature_dict['up_edges_num'] + feature_dict['down_edges_num']) / 2.0)
+        feature_dict['down_peak_edge_ratio'] = feature_dict['down_peaks_num'] * 1.0 / ((feature_dict['up_edges_num'] + feature_dict['down_edges_num']) / 2.0)
+        return feature_dict
 
     def predictWithReason(self, signals, params, request_params = dict()):
         """
@@ -45,9 +93,9 @@ class Classifier(object):
         # get all down-peak points
         self.downPeakLocations = self.getDownPeakLoc_(signals, params)
         # get all upwards edges
-        self.upwardsEdges = self.getDownEdges_(signals, params)
+        self.downwardsEdges = self.getDownEdges_(signals, params)
         # get all downwards edges
-        self.downwardsEdges = self.getUpEdges_(signals, params)
+        self.upwardsEdges = self.getUpEdges_(signals, params)
 
         # start analysis
         (result, reason) = self.signalDiagnosis(signals, params)

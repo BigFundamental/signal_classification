@@ -40,6 +40,13 @@ class SignalMgr(object):
    def __init__(self):
        self.debug_info = dict()
 
+   def get_features(self, file_path, request_param = dict()):
+       dt, raw_signals = self.parse_signals_from_file(file_path, request_param.get('skip_row', 0))
+       normalized_signals = self.normalize_signals(raw_signals)
+
+       classifier = Classifier()
+       return classifier.get_features(normalized_signals, SignalMgr.signalParams, request_param)
+
    def process(self, file_path, request_param = dict()):
        """
        httpserver process callback entry function
