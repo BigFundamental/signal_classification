@@ -44,7 +44,8 @@ class SignalMgr(object):
        dt, raw_signals = self.parse_signals_from_file(file_path, request_param.get('skip_row', 0))
        normalized_signals = self.normalize_signals(raw_signals)
 
-       classifier = Classifier()
+       if request_param.has_key('model_path'):
+           classifier = Classifier(model_path = request_param['model_path'])
        return classifier.get_features(normalized_signals, SignalMgr.signalParams, request_param)
 
    def process(self, file_path, request_param = dict()):

@@ -26,6 +26,8 @@ class Classifier(object):
     def __init__(self, model_path=''):
         self.featureExtractor = FeatureExtractor()
         self.features = dict()
+        if model_path == 'train':
+            return
         if model_path != '':
             self.model = joblib.load(model_path)
         else:
