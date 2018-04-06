@@ -5,6 +5,7 @@ import numpy as np
 from filter import Filter
 from feature_extractor import FeatureExtractor
 import logging
+import os
 from sklearn.externals import joblib
 
 logger = logging.getLogger('server')
@@ -28,7 +29,7 @@ class Classifier(object):
         if model_path != '':
             self.model = joblib.load(model_path)
         else:
-            self.model = joblib.load("./model/ada.pkl")
+            self.model = joblib.load(os.path.abspath('..') + os.sep + "model" + os.sep + "ada.pkl")
 
     def predict(self, signals, params, request_params = dict()):
         """
