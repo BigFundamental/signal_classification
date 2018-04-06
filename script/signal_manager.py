@@ -59,7 +59,10 @@ class SignalMgr(object):
        #        easing later threshold variance between different channels
        normalized_signals = self.normalize_signals(raw_signals)
        # step3: using classifier to detects potential signals with pitfalls
-       classifier = Classifier()
+       if request_param.has_key('model_path'):
+           classifier = Classifier(model_path = request_param['model_path'])
+       else:
+           classifier = Classifier()
        
        return classifier.predict(normalized_signals, SignalMgr.signalParams, request_param)
   

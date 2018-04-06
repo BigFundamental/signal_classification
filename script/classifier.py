@@ -22,10 +22,13 @@ class Classifier(object):
     FLAW_TYPE_TWO_MANY_DOWN_PEAKS = 6
     ERR_RET_PARAM = dict({'stat': 1, 'reason': 0, 'speed': 0})
 
-    def __init__(self):
+    def __init__(self, model_path=''):
         self.featureExtractor = FeatureExtractor()
         self.features = dict()
-        self.model = joblib.load("./model/ada.pkl")
+        if model_path != '':
+            self.model = joblib.load(model_path)
+        else:
+            self.model = joblib.load("./model/ada.pkl")
 
     def predict(self, signals, params, request_params = dict()):
         """
@@ -38,8 +41,8 @@ class Classifier(object):
         f = self.get_features(signals, params, request_params)
         self.upwardsEdges = f['up_edges']
         self.downwardsEdges = f['down_edges']
-        feature = [f['peaks_num'], f['up_edges_num'], f['down_edges_num'], f['down_peaks_num'], f['peak_edge_ratio'], f['down_peak_edge_ratio']]
-        result = self.model.predict(feature)[0]
+        feature = np.array([f['peaks_num'], f['up_edges_num'], f['down_edges_num'], f['down_peaks_num'], f['peak_edge_ratio'], f['down_peak_edge_ratio']]).reshape(1, -1)
+        result = int(self.model.predict(feature)[0])
         
         retParam = dict()
         retParam['stat'] = result
@@ -75,8 +78,13 @@ class Classifier(object):
         feature_dict['down_peaks_num'] = len(feature_dict['down_peaks'])
         feature_dict['up_edges_num'] = len(feature_dict['up_edges'])
         feature_dict['down_edges_num'] = len(feature_dict['down_edges'])
-        feature_dict['peak_edge_ratio'] = feature_dict['peaks_num'] * 1.0 / ((feature_dict['up_edges_num'] + feature_dict['down_edges_num']) / 2.0)
-        feature_dict['down_peak_edge_ratio'] = feature_dict['down_peaks_num'] * 1.0 / ((feature_dict['up_edges_num'] + feature_dict['down_edges_num']) / 2.0)
+        if feature_dict['up_edges_num'] + feature_dict['down_edges_num'] != 0:
+            feature_dict['peak_edge_ratio'] = feature_dict['peaks_num'] * 1.0 / ((feature_dict['up_edges_num'] + feature_dict['down_edges_num']) / 2.0)
+            feature_dict['down_peak_edge_ratio'] = feature_dict['down_peaks_num'] * 1.0 / ((feature_dict['up_edges_num'] + feature_dict['down_edges_num']) / 2.0)
+        else:
+            feature_dict['peak_edge_ratio'] = 0.0
+            feature_dict['down_peak_edge_ratio'] = 0.0
+
         return feature_dict
 
     def predictWithReason(self, signals, params, request_params = dict()):
