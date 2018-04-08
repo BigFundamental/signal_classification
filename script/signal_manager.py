@@ -35,8 +35,8 @@ class SignalMgr(object):
            'WITH_HEADER': False,
            'COLUMN_NUM': 1,
            'SAMPLING_DT': 0.00004,
-           'SPEED_LOWER_BOUND':15500,
-           'SPEED_UPPER_BOUND':12300
+           'SPEED_LOWER_BOUND':12300,
+           'SPEED_UPPER_BOUND':15500
    }
 
    def __init__(self):
