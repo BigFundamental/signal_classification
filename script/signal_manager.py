@@ -54,7 +54,7 @@ class SignalMgr(object):
        dict result for outer server
        """
        # step1: read raw signals
-       dt, raw_signals = self.parse_signals_from_file(file_path, request_param.get('skip_row', 0))
+       dt, raw_signals = self.parse_signals_from_file(file_path,int(request_param.get('skip_row', [0])[0]))
        logger.debug('dt:%s raw_signals:%s' % (str(dt), str(raw_signals)))
        # step2: normalize input signals using guassian normalization
        #        easing later threshold variance between different channels
