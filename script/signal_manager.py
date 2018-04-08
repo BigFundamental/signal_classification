@@ -34,14 +34,16 @@ class SignalMgr(object):
            'DOWN_PEAK_THESHOLD': -1,
            'WITH_HEADER': False,
            'COLUMN_NUM': 1,
-           'SAMPLING_DT': 0.00004
+           'SAMPLING_DT': 0.00004,
+           'SPEED_LOWER_BOUND':15500,
+           'SPEED_UPPER_BOUND':12300
    }
 
    def __init__(self):
        self.debug_info = dict()
 
    def get_features(self, file_path, request_param = dict()):
-       dt, raw_signals = self.parse_signals_from_file(file_path, request_param.get('skip_row', 0))
+       dt, raw_signals = self.parse_signals_from_file(file_path, int(request_param.get('skip_row', [0])[0]))
        normalized_signals = self.normalize_signals(raw_signals)
 
        if request_param.has_key('model_path'):

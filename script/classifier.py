@@ -52,16 +52,17 @@ class Classifier(object):
         retParam['stat'] = result
         retParam['reason'] = -1
 
-        if result != 0:
-            retParam['speed'] = 0
-        else:
-            # calculate speed
-            samplerate = request_params.get('samplerate', [params['SAMPLING_DT']])[0]
-            #samplerate = request_params.get('samplerate', params['SAMPLING_DT']) 
-            retParam['speed'] = self.calcSpeed(signals, params, float(samplerate))
-            if retParam['speed'] < 12300 or retParam['speed'] > 15500:
-                retParam['stat']= 1
-                retParam['reason'] = Classifier.FLAW_TYPE_SPEED_INVALID
+        # calculate speed
+        samplerate = request_params.get('samplerate', [params['SAMPLING_DT']])[0]
+        #samplerate = request_params.get('samplerate', params['SAMPLING_DT']) 
+        retParam['speed'] = self.calcSpeed(signals, params, float(samplerate))
+
+        #judge speeds
+        speed_lower_bound = int(request_params.get('speed_lower_bound', [params['SPEED_LOWER_BOUND']])[0])
+        speed_upper_bound = int(request_params.get('speed_upper_bound', [params['SPEED_UPPER_BOUND']])[0])
+        if retParam['speed'] < speed_lower_bound or retParam['speed'] > speed_upper_bound:
+            retParam['stat']= 1
+            retParam['reason'] = Classifier.FLAW_TYPE_SPEED_INVALID
         return retParam
 
     def get_features(self, signals, params, request_params = dict()):
