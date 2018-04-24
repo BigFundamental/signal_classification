@@ -44,7 +44,7 @@ class Classifier(object):
         f = self.get_features(signals, params, request_params)
         self.upwardsEdges = f['up_edges']
         self.downwardsEdges = f['down_edges']
-        feature = np.array([f['down_edges_num'], f['down_peak_edge_ratio'], f['down_peaks_num'], f['peak_edge_ratio'], f['peaks_num'], f['up_edges_num'], f['edge_diff_10'], f['edge_diff_20'], f['edge_diff_30'], f['edge_diff_50']]).reshape(1, -1)
+        feature = np.array([f['down_edges_num'], f['down_peak_edge_ratio'], f['down_peaks_num'], f['peak_edge_ratio'], f['peaks_num'], f['up_edges_num'], f['edge_diff_10'], f['edge_diff_20'], f['edge_diff_50'], f['width_diff_10']]).reshape(1, -1)
         #feature = np.array([f['peaks_num'], f['up_edges_num'], f['down_edges_num'], f['down_peaks_num'], f['peak_edge_ratio'], f['down_peak_edge_ratio']]).reshape(1, -1)
         result = int(self.model.predict(feature)[0])
         
@@ -52,17 +52,18 @@ class Classifier(object):
         retParam['stat'] = result
         retParam['reason'] = -1
 
-        # calculate speed
-        samplerate = request_params.get('samplerate', [params['SAMPLING_DT']])[0]
-        #samplerate = request_params.get('samplerate', params['SAMPLING_DT']) 
-        retParam['speed'] = self.calcSpeed(signals, params, float(samplerate))
+        if result == 0:
+            # calculate speed
+            samplerate = request_params.get('samplerate', [params['SAMPLING_DT']])[0]
+            #samplerate = request_params.get('samplerate', params['SAMPLING_DT']) 
+            retParam['speed'] = self.calcSpeed(signals, params, float(samplerate))
 
-        #judge speeds
-        speed_lower_bound = int(request_params.get('speed_lower_bound', [params['SPEED_LOWER_BOUND']])[0])
-        speed_upper_bound = int(request_params.get('speed_upper_bound', [params['SPEED_UPPER_BOUND']])[0])
-        if retParam['speed'] < speed_lower_bound or retParam['speed'] > speed_upper_bound:
-            retParam['stat']= 1
-            retParam['reason'] = Classifier.FLAW_TYPE_SPEED_INVALID
+            #judge speeds
+            speed_lower_bound = int(request_params.get('speed_lower_bound', [params['SPEED_LOWER_BOUND']])[0])
+            speed_upper_bound = int(request_params.get('speed_upper_bound', [params['SPEED_UPPER_BOUND']])[0])
+            if retParam['speed'] < speed_lower_bound or retParam['speed'] > speed_upper_bound:
+                retParam['stat']= 1
+                retParam['reason'] = Classifier.FLAW_TYPE_SPEED_INVALID
         return retParam
 
     def get_features(self, signals, params, request_params = dict()):
@@ -95,6 +96,7 @@ class Classifier(object):
         feature_dict['up_edge_height'] = self.getEdgeHeight_(signals, feature_dict['up_edges'])
         feature_dict['down_edge_height'] = self.getEdgeHeight_(signals, feature_dict['down_edges'])
         feature_dict['paired_edges'] = self.getPairedEdges_(params, feature_dict['up_edges'], feature_dict['down_edges'])
+        # 上下沿对比数据
         feature_dict['paired_edge_height'] = self.getPairedEdgeHeight_(signals, feature_dict['paired_edges'])
         feature_dict['paired_edge_height_diff'] = sorted(self.getPairedEdgeDifference_(feature_dict['paired_edge_height']), reverse=True)
         # 获取上下沿边的长度diff分位数据
@@ -102,6 +104,14 @@ class Classifier(object):
         feature_dict['edge_diff_20'] = np.percentile(feature_dict['paired_edge_height_diff'], 80)
         feature_dict['edge_diff_30'] = np.percentile(feature_dict['paired_edge_height_diff'], 70)
         feature_dict['edge_diff_50'] = np.percentile(feature_dict['paired_edge_height_diff'], 50)
+
+        # 上下边缘对比数据
+        feature_dict['paired_edge_width'] = self.getPairedEdgeUpperBottomWidth_(signals, feature_dict['paired_edges'])
+        feature_dict['paired_edge_width_diff'] = sorted(self.getPairedWidthDifference_(feature_dict['paired_edge_width']), reverse=True)
+        feature_dict['width_diff_10'] = np.percentile(feature_dict['paired_edge_width_diff'], 90)
+        feature_dict['width_diff_20'] = np.percentile(feature_dict['paired_edge_width_diff'], 80)
+        feature_dict['width_diff_30'] = np.percentile(feature_dict['paired_edge_width_diff'], 70)
+        feature_dict['width_diff_50'] = np.percentile(feature_dict['paired_edge_width_diff'], 50)
         return feature_dict
 
     def predictWithReason(self, signals, params, request_params = dict()):
@@ -214,6 +224,17 @@ class Classifier(object):
             up_down_height_paired_list.append((up_height, down_height))
         return up_down_height_paired_list
 
+    def getPairedEdgeUpperBottomWidth_(self, signals, up_down_edge_pairs):
+        """
+        get paired edges's upper/bottom width
+        """
+        up_down_width_paired_list = list()
+        for (up_idx, down_idx) in up_down_edge_pairs:
+            upper_width = abs(up_idx[1] - down_idx[0]) + 1
+            bottom_width = abs(up_idx[0] - down_idx[1]) + 1
+            up_down_width_paired_list.append((bottom_width, upper_width))
+        return up_down_width_paired_list
+
     def getPairedEdgeDifference_(self, up_down_edge_height_paired_list):
         """
         given paired height list, scale difference to [0, 1]
@@ -225,6 +246,16 @@ class Classifier(object):
             assert(base != 0)
             up_down_height_diff.append(diff / base)
         return up_down_height_diff
+
+    def getPairedWidthDifference_(self, up_down_edge_width_paired_list):
+        """
+        given paired width list, scale difference to [0, 1]
+        """
+        up_down_width_diff = list()
+        for (up_width, down_width) in up_down_edge_width_paired_list:
+            assert(down_width != 0)
+            up_down_width_diff.append(abs(up_width - down_width) * 1.0 / down_width)
+        return up_down_width_diff
 
     def getPairedEdges_(self, params, up_edges = None, down_edges = None):
         """

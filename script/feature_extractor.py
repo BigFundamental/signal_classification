@@ -75,7 +75,7 @@ class FeatureExtractor(object):
             #print "merge %d: %s" % (i, str(merged_edges))
         return merged_edges
 
-    def _consecutive_segments(self, segment, threshold, direction, thres_l = 0.01):
+    def _consecutive_segments(self, segment, threshold, direction, thres_l = 0.05):
         """
         select minimal consecutive edges in range
         Assumption: there is one sharp edge exists in segment
