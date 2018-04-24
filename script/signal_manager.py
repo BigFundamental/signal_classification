@@ -21,7 +21,7 @@ class SignalMgr(object):
            'PEAK_THRESHOLD': 0.5,
            'PEAK_MISSING_RATIO': 0.25,
            'EDGE_WINDOW_SIZE': 7,
-           'EDGE_THRESHOLD_HIGH': 1.0,
+           'EDGE_THRESHOLD_HIGH': 0.4,
            'EDGE_THRESHOLD_LOW': 0.05,
            'SHOULDER_UNSYMMETRIC_RATIO': 0.25,
            'SHOULDER_UNSYMMETRIC_VAR':0.42,
@@ -48,6 +48,8 @@ class SignalMgr(object):
 
        if request_param.has_key('model_path'):
            classifier = Classifier(model_path = request_param['model_path'])
+       else:
+           classifier = Classifier()
        return classifier.get_features(normalized_signals, SignalMgr.signalParams, request_param)
 
    def process(self, file_path, request_param = dict()):

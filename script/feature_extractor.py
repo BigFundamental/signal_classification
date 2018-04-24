@@ -8,7 +8,7 @@ brief: signal pattern extractors
 import pandas as pd
 import numpy as np
 import scipy.signal as signal
-from matplotlib import pyplot as plt
+#from matplotlib import pyplot as plt
 from filter import Filter
 
 class FeatureExtractor(object):
@@ -86,6 +86,7 @@ class FeatureExtractor(object):
         peak = np.argmax(segment)
         bottom = np.argmin(segment)
         segment_margin = segment[peak] - segment[bottom]
+        #print "peak:%.2lf, bottom:%.2lf, margin:%.2lf" % (peak, bottom, segment_margin)
         #print "peak_idx:%d, peak: %f, bottom_idx:%d, bottom: %f, margin: %f" % (peak, segment[peak], bottom, segment[bottom], segment_margin)
         if segment_margin < threshold:
             return None
@@ -145,9 +146,12 @@ class FeatureExtractor(object):
             #print "range(%d, %d), ret:%s" % (i, i + window_size - 1, str(ret))
             if ret != None and len(ret) == 2:
                 edges.append((i + ret[0], i + ret[1]))
-                i += ret[1] + 1
+                #i += ret[1] + 1
+                i += ret[1]
             else:
                 i += 1
+            #print ("[%d, %d]: ") % (i, i + window_size), ret
+            #print edges
         #print "before merge: %s" % (str(edges))
         return self._merge_adjecent_segments(edges)
 
@@ -172,3 +176,21 @@ class FeatureExtractor(object):
         # medfilt to remove sharp changes, smooth data for later edge detection
         med_signals = Filter.medfilter(signals, 9)
         return self.detectEdges(med_signals, window_size, threshold, -1)
+
+    def singleEdgeHeight(self, signals, edge):
+        """
+        get sigle edge' height
+        """
+        l_b = edge[0]
+        r_b = edge[1]
+        med_signals = Filter.medfilter(signals, 9)
+        return abs(max(med_signals[l_b:r_b+1]) - min(med_signals[l_b:r_b+1]))
+
+    def edgeHeight(self, signals, edge_loc):
+        """
+        calcuate edge absolute heights
+        """
+        height_list = list()
+        for (l_b, r_b) in edge_loc:
+            height_list.append(abs(signals[r_b] - signals[l_b]))
+        return height_list

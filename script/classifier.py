@@ -44,7 +44,7 @@ class Classifier(object):
         f = self.get_features(signals, params, request_params)
         self.upwardsEdges = f['up_edges']
         self.downwardsEdges = f['down_edges']
-        feature = np.array([f['down_edges_num'], f['down_peak_edge_ratio'], f['down_peaks_num'], f['peak_edge_ratio'], f['peaks_num'], f['up_edges_num']]).reshape(1, -1)
+        feature = np.array([f['down_edges_num'], f['down_peak_edge_ratio'], f['down_peaks_num'], f['peak_edge_ratio'], f['peaks_num'], f['up_edges_num'], f['edge_diff_10'], f['edge_diff_20'], f['edge_diff_30'], f['edge_diff_50']]).reshape(1, -1)
         #feature = np.array([f['peaks_num'], f['up_edges_num'], f['down_edges_num'], f['down_peaks_num'], f['peak_edge_ratio'], f['down_peak_edge_ratio']]).reshape(1, -1)
         result = int(self.model.predict(feature)[0])
         
@@ -74,6 +74,8 @@ class Classifier(object):
         if 0 == signal_length:
             return feature_dict
 
+        # tracing & debuging features, for visualizations
+        feature_dict['normalized_signals'] = signals
         # get peaks / edges
         feature_dict['peaks'] = self.getPeakLoc_(signals, params)
         feature_dict['down_peaks'] = self.getDownPeakLoc_(signals, params)
@@ -90,6 +92,16 @@ class Classifier(object):
             feature_dict['peak_edge_ratio'] = 0.0
             feature_dict['down_peak_edge_ratio'] = 0.0
 
+        feature_dict['up_edge_height'] = self.getEdgeHeight_(signals, feature_dict['up_edges'])
+        feature_dict['down_edge_height'] = self.getEdgeHeight_(signals, feature_dict['down_edges'])
+        feature_dict['paired_edges'] = self.getPairedEdges_(params, feature_dict['up_edges'], feature_dict['down_edges'])
+        feature_dict['paired_edge_height'] = self.getPairedEdgeHeight_(signals, feature_dict['paired_edges'])
+        feature_dict['paired_edge_height_diff'] = sorted(self.getPairedEdgeDifference_(feature_dict['paired_edge_height']), reverse=True)
+        # 获取上下沿边的长度diff分位数据
+        feature_dict['edge_diff_10'] = np.percentile(feature_dict['paired_edge_height_diff'], 90)
+        feature_dict['edge_diff_20'] = np.percentile(feature_dict['paired_edge_height_diff'], 80)
+        feature_dict['edge_diff_30'] = np.percentile(feature_dict['paired_edge_height_diff'], 70)
+        feature_dict['edge_diff_50'] = np.percentile(feature_dict['paired_edge_height_diff'], 50)
         return feature_dict
 
     def predictWithReason(self, signals, params, request_params = dict()):
@@ -191,17 +203,51 @@ class Classifier(object):
 
         return self.featureExtractor.downwardsEdges(signals, _edge_window_size, _edge_threshold_H)
 
-    def getPairedEdges_(self, params):
+    def getPairedEdgeHeight_(self, signals, up_down_edge_pairs):
+        """
+        get paired edge's height
+        """
+        up_down_height_paired_list = list()
+        for (up_idx, down_idx) in up_down_edge_pairs:
+            up_height = self.featureExtractor.singleEdgeHeight(signals, up_idx)
+            down_height = self.featureExtractor.singleEdgeHeight(signals, down_idx)
+            up_down_height_paired_list.append((up_height, down_height))
+        return up_down_height_paired_list
+
+    def getPairedEdgeDifference_(self, up_down_edge_height_paired_list):
+        """
+        given paired height list, scale difference to [0, 1]
+        """
+        up_down_height_diff = list()
+        for (up_height, down_height) in up_down_edge_height_paired_list:
+            base = max(up_height, down_height)
+            diff = abs(up_height - down_height)
+            assert(base != 0)
+            up_down_height_diff.append(diff / base)
+        return up_down_height_diff
+
+    def getPairedEdges_(self, params, up_edges = None, down_edges = None):
         """
         group upwards edges & downwards edge list
         """
         paired_edges = list()
         up_idx = 0
         down_idx = 0
-        logger.debug("upwardsEdges: %d downwardsEdges: %d" % (len(self.upwardsEdges), len(self.downwardsEdges)))
-        while up_idx < len(self.upwardsEdges) and down_idx < len(self.downwardsEdges):
-           up = self.upwardsEdges[up_idx]
-           down = self.downwardsEdges[down_idx]
+        upwardsEdges = None
+        downwardsEdges = None
+        if up_edges != None:
+            upwardsEdges = up_edges
+        else:
+            upwardsEdges = self.upwardsEdges
+
+        if down_edges != None:
+            downwardsEdges = down_edges
+        else:
+            downwardsEdges = self.downwardsEdges
+        #logger.debug("upwardsEdges: %d downwardsEdges: %d" % (len(self.upwardsEdges), len(self.downwardsEdges)))
+        while up_idx < len(upwardsEdges) and down_idx < len(downwardsEdges):
+           up = upwardsEdges[up_idx]
+           down = downwardsEdges[down_idx]
            #print "up_idx:%d down_idx:%d up:%s down:%s" % (up_idx, down_idx, str(up), str(down))
            if up[1] > down[0]:
                down_idx += 1
@@ -210,6 +256,12 @@ class Classifier(object):
            up_idx += 1
            down_idx +=1
         return paired_edges
+    
+    def getEdgeHeight_(self, signals, edge_loc):
+        """
+        caculate edge's absolute height
+        """
+        return self.featureExtractor.edgeHeight(signals, edge_loc)
 
     #### abnormal signal reasoning ####
     def isLackOfPeaks(self, params):
