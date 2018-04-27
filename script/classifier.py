@@ -51,6 +51,7 @@ class Classifier(object):
         retParam = dict()
         retParam['stat'] = result
         retParam['reason'] = -1
+        retParam['speed'] = 0
 
         if result == 0:
             # calculate speed
