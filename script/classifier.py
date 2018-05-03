@@ -44,8 +44,10 @@ class Classifier(object):
         f = self.get_features(signals, params, request_params)
         self.upwardsEdges = f['up_edges']
         self.downwardsEdges = f['down_edges']
-        feature = np.array([f['down_edges_num'], f['down_peak_edge_ratio'], f['down_peaks_num'], f['peak_edge_ratio'], f['peaks_num'], f['up_edges_num'], f['edge_diff_10'], f['edge_diff_20'], f['edge_diff_50'], f['width_diff_10']]).reshape(1, -1)
-        #feature = np.array([f['peaks_num'], f['up_edges_num'], f['down_edges_num'], f['down_peaks_num'], f['peak_edge_ratio'], f['down_peak_edge_ratio']]).reshape(1, -1)
+        #feature = np.array([f['down_edges_num'], f['down_peak_edge_ratio'], f['down_peaks_num'], f['peak_edge_ratio'], f['peaks_num'], f['up_edges_num'], f['edge_diff_10'], f['edge_diff_20'], f['edge_diff_50'], f['width_diff_10']]).reshape(1, -1)
+        #feature = np.array([f['peaks_num'], f['up_edges_num'], f['down_edges_num'], f['down_peaks_num'], f['peak_edge_ratio'], f['down_peak_edge_ratio'], f['edge_diff_10'], f['edge_diff_20'], f['edge_diff_50'], f['width_diff_10']]).reshape(1, -1)
+        feature = self.get_feature_vec(f)
+        #print "predict_feature:", feature 
         result = int(self.model.predict(feature)[0])
         
         retParam = dict()
@@ -66,6 +68,19 @@ class Classifier(object):
                 retParam['stat']= 1
                 retParam['reason'] = Classifier.FLAW_TYPE_SPEED_INVALID
         return retParam
+    
+    def get_feature_vec(self, features):
+        feature_list = sorted(self.get_feature_list())
+        fea_vec = np.zeros(len(feature_list))
+        for i in xrange(len(feature_list)):
+            fea_vec[i] = features[feature_list[i]]
+        return fea_vec.reshape(1, -1)
+
+    def get_feature_list(self):
+        """
+        predefined feature lists, order is sensitive
+        """
+        return ['peaks_num', 'up_edges_num', 'down_edges_num', 'down_peaks_num', 'peak_edge_ratio', 'down_peak_edge_ratio', 'edge_diff_10', 'edge_diff_20', 'edge_diff_50', 'width_diff_10']
 
     def get_features(self, signals, params, request_params = dict()):
         """
