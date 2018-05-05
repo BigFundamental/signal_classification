@@ -116,18 +116,32 @@ class Classifier(object):
         feature_dict['paired_edge_height'] = self.getPairedEdgeHeight_(signals, feature_dict['paired_edges'])
         feature_dict['paired_edge_height_diff'] = sorted(self.getPairedEdgeDifference_(feature_dict['paired_edge_height']), reverse=True)
         # 获取上下沿边的长度diff分位数据
-        feature_dict['edge_diff_10'] = np.percentile(feature_dict['paired_edge_height_diff'], 90)
-        feature_dict['edge_diff_20'] = np.percentile(feature_dict['paired_edge_height_diff'], 80)
-        feature_dict['edge_diff_30'] = np.percentile(feature_dict['paired_edge_height_diff'], 70)
-        feature_dict['edge_diff_50'] = np.percentile(feature_dict['paired_edge_height_diff'], 50)
+        if len(feature_dict['paired_edge_height_diff']) != 0:
+            feature_dict['edge_diff_10'] = np.percentile(feature_dict['paired_edge_height_diff'], 90)
+            feature_dict['edge_diff_20'] = np.percentile(feature_dict['paired_edge_height_diff'], 80)
+            feature_dict['edge_diff_30'] = np.percentile(feature_dict['paired_edge_height_diff'], 70)
+            feature_dict['edge_diff_50'] = np.percentile(feature_dict['paired_edge_height_diff'], 50)
+        else:
+            feature_dict['edge_diff_10'] = 100
+            feature_dict['edge_diff_20'] = 100
+            feature_dict['edge_diff_30'] = 100
+            feature_dict['edge_diff_50'] = 100
+            
 
         # 上下边缘对比数据
         feature_dict['paired_edge_width'] = self.getPairedEdgeUpperBottomWidth_(signals, feature_dict['paired_edges'])
         feature_dict['paired_edge_width_diff'] = sorted(self.getPairedWidthDifference_(feature_dict['paired_edge_width']), reverse=True)
-        feature_dict['width_diff_10'] = np.percentile(feature_dict['paired_edge_width_diff'], 90)
-        feature_dict['width_diff_20'] = np.percentile(feature_dict['paired_edge_width_diff'], 80)
-        feature_dict['width_diff_30'] = np.percentile(feature_dict['paired_edge_width_diff'], 70)
-        feature_dict['width_diff_50'] = np.percentile(feature_dict['paired_edge_width_diff'], 50)
+        if len(feature_dict['paired_edge_width_diff']) != 0:
+            feature_dict['width_diff_10'] = np.percentile(feature_dict['paired_edge_width_diff'], 90)
+            feature_dict['width_diff_20'] = np.percentile(feature_dict['paired_edge_width_diff'], 80)
+            feature_dict['width_diff_30'] = np.percentile(feature_dict['paired_edge_width_diff'], 70)
+            feature_dict['width_diff_50'] = np.percentile(feature_dict['paired_edge_width_diff'], 50)
+        else:
+            feature_dict['width_diff_10'] = 100
+            feature_dict['width_diff_20'] = 100
+            feature_dict['width_diff_30'] = 100
+            feature_dict['width_diff_50'] = 100
+
         return feature_dict
 
     def predictWithReason(self, signals, params, request_params = dict()):
