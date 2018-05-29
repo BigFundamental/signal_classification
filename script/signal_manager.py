@@ -59,13 +59,13 @@ class SignalMgr(object):
        """
        # step1: read raw signals
        dt, raw_signals = self.parse_signals_from_file(file_path,int(request_param.get('skip_row', [0])[0]))
-       logger.debug('dt:%s raw_signals:%s' % (str(dt), str(raw_signals)))
+       #logger.debug('dt:%s raw_signals:%s' % (str(dt), str(raw_signals)))
        # step2: normalize input signals using guassian normalization
        #        easing later threshold variance between different channels
        normalized_signals = self.normalize_signals(raw_signals)
        # step3: using classifier to detects potential signals with pitfalls
        if request_param.has_key('model_path'):
-           classifier = Classifier(model_path = request_param['model_path'])
+           classifier = Classifier(model_path = request_param['model_path'][0])
        else:
            classifier = Classifier()
        
@@ -122,12 +122,12 @@ class SignalMgr(object):
        dt = np.array([])
        raw_signals = np.array([])
        if SignalMgr.signalParams['COLUMN_NUM'] == 1:
-           logger.debug(str(raw_signals))
-           logger.debug(str(header_lines))
-           logger.debug(str(column_index))
-           logger.debug("path:[%s]" % (fpath))
+           #logger.debug(str(raw_signals))
+           #logger.debug(str(header_lines))
+           #logger.debug(str(column_index))
+           #logger.debug("path:[%s]" % (fpath))
            raw_signals = np.genfromtxt(fpath, unpack=True, skip_header=header_lines, dtype=np.float32, delimiter=',', usecols=column_index)
-           logger.debug(str(raw_signals))
+           #logger.debug(str(raw_signals))
            dt = np.arange(0, len(raw_signals) * SignalMgr.signalParams['SAMPLING_DT'], SignalMgr.signalParams['SAMPLING_DT'])
        elif SignalMgr.signalParams['COLUMN_NUM'] == 2:
            dt, raw_signals = np.genfromtxt(fpath, unpack=True, skip_header=header_lines, dtype=np.float32, delimiter=',', usecols=column_index)

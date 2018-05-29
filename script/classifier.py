@@ -44,10 +44,7 @@ class Classifier(object):
         f = self.get_features(signals, params, request_params)
         self.upwardsEdges = f['up_edges']
         self.downwardsEdges = f['down_edges']
-        #feature = np.array([f['down_edges_num'], f['down_peak_edge_ratio'], f['down_peaks_num'], f['peak_edge_ratio'], f['peaks_num'], f['up_edges_num'], f['edge_diff_10'], f['edge_diff_20'], f['edge_diff_50'], f['width_diff_10']]).reshape(1, -1)
-        #feature = np.array([f['peaks_num'], f['up_edges_num'], f['down_edges_num'], f['down_peaks_num'], f['peak_edge_ratio'], f['down_peak_edge_ratio'], f['edge_diff_10'], f['edge_diff_20'], f['edge_diff_50'], f['width_diff_10']]).reshape(1, -1)
         feature = self.get_feature_vec(f)
-        #print "predict_feature:", feature 
         result = int(self.model.predict(feature)[0])
         
         retParam = dict()
@@ -55,12 +52,12 @@ class Classifier(object):
         retParam['reason'] = -1
         retParam['speed'] = 0
 
-        if result == 0:
-            # calculate speed
-            samplerate = request_params.get('samplerate', [params['SAMPLING_DT']])[0]
-            #samplerate = request_params.get('samplerate', params['SAMPLING_DT']) 
-            retParam['speed'] = self.calcSpeed(signals, params, float(samplerate))
+        # calculate speed
+        samplerate = request_params.get('samplerate', [params['SAMPLING_DT']])[0]
+        #samplerate = request_params.get('samplerate', params['SAMPLING_DT']) 
+        retParam['speed'] = self.calcSpeed(signals, params, float(samplerate))
 
+        if result == 0:
             #judge speeds
             speed_lower_bound = int(request_params.get('speed_lower_bound', [params['SPEED_LOWER_BOUND']])[0])
             speed_upper_bound = int(request_params.get('speed_upper_bound', [params['SPEED_UPPER_BOUND']])[0])
@@ -173,7 +170,7 @@ class Classifier(object):
             retParam['speed'] = 0
         else:
             # calculate speed
-            logger.debug('request_params: %s' % str(request_params))
+            #logger.debug('request_params: %s' % str(request_params))
             samplerate = request_params.get('samplerate', [params['SAMPLING_DT']])[0]
             #samplerate = request_params.get('samplerate', params['SAMPLING_DT']) 
             retParam['speed'] = self.calcSpeed(signals, params, float(samplerate))
@@ -202,6 +199,8 @@ class Classifier(object):
         total_secs = len(signals) * sampling_dt
         cycle_num = (len(self.upwardsEdges) + len(self.downwardsEdges)) / 2.0 + 1
         rpm = cycle_num / 4.0 / total_secs * 60.0
+        if total_secs == 0:
+            rpm = 0
         #print "total_time:%.7lf cycle_num:%d" % (total_secs, cycle_num)
         return rpm
 
@@ -371,7 +370,7 @@ class Classifier(object):
         global_width_mean = np.mean(widths)
         global_width_std = np.std(widths)
         
-        logger.debug("width mean: %.2lf width variance: %.2lf" % (global_width_mean, global_width_std))
+        #logger.debug("width mean: %.2lf width variance: %.2lf" % (global_width_mean, global_width_std))
         if global_width_mean > _shoulder_symmentric_mean_threshold or global_width_std > _shoulder_symmentric_variance_threshold:
             return True 
         return False

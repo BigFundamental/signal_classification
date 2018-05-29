@@ -27,8 +27,8 @@ class Handler(BaseHTTPRequestHandler):
 
     def get_params_(self):
         query_components = parse_qs(urlparse(unquote(self.path)).query)
-        logger.debug('raw GET params: [%s]' % unquote(self.path))
-        logger.debug('request params: %s' % str(query_components))
+        #logger.debug('raw GET params: [%s]' % unquote(self.path))
+        #logger.debug('request params: %s' % str(query_components))
         return query_components
 
     def do_GET(self):
@@ -41,6 +41,7 @@ class Handler(BaseHTTPRequestHandler):
         jsonRetParam['speed'] = 0
         try:
             params = self.get_params_()
+            #print "debug_params:", params
             signal_mgr = SignalMgr()
             pred_ret = signal_mgr.process(params['filepath'][0], params)
             jsonRetParam['resultCode'] = pred_ret['stat']
