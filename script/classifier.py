@@ -31,7 +31,16 @@ class Classifier(object):
         if model_path != '':
             self.model = joblib.load(model_path)
         else:
-            self.model = joblib.load(os.path.abspath('..') + os.sep + "model" + os.sep + "ada.pkl")
+            #self.model = joblib.load(os.path.abspath('..') + os.sep + "model" + os.sep + "ada.pkl")
+            self.model = joblib.load(os.path.abspath('..') + os.sep + "model" + os.sep + "xgb.pkl")
+
+    def normalize_signals(self, signals):
+        """
+        N(0, 1) normalization of input signals
+        """
+        mean = np.mean(signals)
+        delta = np.std(signals)
+        return (signals - mean) / delta
 
     def predict(self, signals, params, request_params = dict()):
         """
@@ -40,8 +49,8 @@ class Classifier(object):
         #return self.predictWithReason(signals, params, request_params)
         return self.predictWithModel(signals, params, request_params)
 
-    def predictWithModel(self, signals, params, request_params = dict()):
-        f = self.get_features(signals, params, request_params)
+    def predictWithModel(self, raw_signals, params, request_params = dict()):
+        f = self.get_features(raw_signals, params, request_params)
         self.upwardsEdges = f['up_edges']
         self.downwardsEdges = f['down_edges']
         feature = self.get_feature_vec(f)
@@ -55,7 +64,7 @@ class Classifier(object):
         # calculate speed
         samplerate = request_params.get('samplerate', [params['SAMPLING_DT']])[0]
         #samplerate = request_params.get('samplerate', params['SAMPLING_DT']) 
-        retParam['speed'] = self.calcSpeed(signals, params, float(samplerate))
+        retParam['speed'] = self.calcSpeed(raw_signals, params, float(samplerate))
 
         if result == 0:
             #judge speeds
@@ -77,22 +86,24 @@ class Classifier(object):
         """
         predefined feature lists, order is sensitive
         """
-        return ['peaks_num', 'up_edges_num', 'down_edges_num', 'down_peaks_num', 'peak_edge_ratio', 'down_peak_edge_ratio', 'edge_diff_10', 'edge_diff_20', 'edge_diff_50', 'width_diff_10']
+        return ['peaks_num', 'up_edges_num', 'down_edges_num', 'down_peaks_num', 'peak_edge_ratio', 'down_peak_edge_ratio', 'edge_diff_10', 'edge_diff_20', 'edge_diff_50', 'width_diff_10', 'negative_peak_num']
 
-    def get_features(self, signals, params, request_params = dict()):
+    def get_features(self, raw_signals, params, request_params = dict()):
         """
         calculate features dicts
         """
-        signal_length = len(signals)
+        signal_length = len(raw_signals)
         feature_dict = dict()
         if 0 == signal_length:
             return feature_dict
 
+        signals = self.normalize_signals(raw_signals)
         # tracing & debuging features, for visualizations
         feature_dict['normalized_signals'] = signals
         # get peaks / edges
         feature_dict['peaks'] = self.getPeakLoc_(signals, params)
         feature_dict['down_peaks'] = self.getDownPeakLoc_(signals, params)
+        feature_dict['negative_peak_num'] = self.getNegativePeakNum_(raw_signals, params)
         feature_dict['up_edges'] = self.getUpEdges_(signals, params)
         feature_dict['down_edges'] = self.getDownEdges_(signals, params)
         feature_dict['peaks_num'] = len(feature_dict['peaks'])
@@ -212,7 +223,14 @@ class Classifier(object):
         _peak_window_size = params['PEAK_WINDOW_SIZE']
         _peak_threshold = params['PEAK_THRESHOLD']
         return self.featureExtractor.peakPointers(signals, _peak_window_size, _peak_threshold)
-    
+
+    def getNegativePeakNum_(self, raw_signals, params):
+        """
+        return total negative downpeak numbers
+        NOTICE: input signals should be raw signals
+        """
+        return self.featureExtractor.outlierPointNum(raw_signals, 0, lambda x, y: x < y)
+
     def getDownPeakLoc_(self, signals, params):
         """
         return all extreme down-peak locations

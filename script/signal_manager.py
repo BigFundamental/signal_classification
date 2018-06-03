@@ -44,13 +44,12 @@ class SignalMgr(object):
 
    def get_features(self, file_path, request_param = dict()):
        dt, raw_signals = self.parse_signals_from_file(file_path, int(request_param.get('skip_row', [0])[0]))
-       normalized_signals = self.normalize_signals(raw_signals)
 
        if request_param.has_key('model_path'):
            classifier = Classifier(model_path = request_param['model_path'])
        else:
            classifier = Classifier()
-       return classifier.get_features(normalized_signals, SignalMgr.signalParams, request_param)
+       return classifier.get_features(raw_signals, SignalMgr.signalParams, request_param)
 
    def process(self, file_path, request_param = dict()):
        """
@@ -62,14 +61,14 @@ class SignalMgr(object):
        #logger.debug('dt:%s raw_signals:%s' % (str(dt), str(raw_signals)))
        # step2: normalize input signals using guassian normalization
        #        easing later threshold variance between different channels
-       normalized_signals = self.normalize_signals(raw_signals)
+       #normalized_signals = self.normalize_signals(raw_signals)
        # step3: using classifier to detects potential signals with pitfalls
        if request_param.has_key('model_path'):
            classifier = Classifier(model_path = request_param['model_path'][0])
        else:
            classifier = Classifier()
        
-       return classifier.predict(normalized_signals, SignalMgr.signalParams, request_param)
+       return classifier.predict(raw_signals, SignalMgr.signalParams, request_param)
   
    def get_header_(self, fpath):
        """
@@ -97,13 +96,6 @@ class SignalMgr(object):
        header_params['lineno'] = line_no
        return header_params
 
-   def normalize_signals(self, signals):
-       """
-       N(0, 1) normalization of input signals
-       """
-       mean = np.mean(signals)
-       delta = np.std(signals)
-       return (signals - mean) / delta
    
    def parse_signals_from_file(self, fpath, skip_rows = 0):
        """

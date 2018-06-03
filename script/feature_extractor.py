@@ -194,3 +194,13 @@ class FeatureExtractor(object):
         for (l_b, r_b) in edge_loc:
             height_list.append(abs(signals[r_b] - signals[l_b]))
         return height_list
+
+    def outlierPointNum(self, signals, threshold, cmp_func):
+        """
+        outlier numbers
+        """
+        ret_list = []
+        for i in signals:
+            if cmp_func(i, threshold):
+                ret_list.append(i)
+        return len(ret_list)
