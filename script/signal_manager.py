@@ -46,7 +46,7 @@ class SignalMgr(object):
        dt, raw_signals = self.parse_signals_from_file(file_path, int(request_param.get('skip_row', [0])[0]))
 
        if request_param.has_key('model_path'):
-           classifier = Classifier(model_path = request_param['model_path'])
+           classifier = Classifier(model_path = request_param['model_path'][0])
        else:
            classifier = Classifier()
        return classifier.get_features(raw_signals, SignalMgr.signalParams, request_param)

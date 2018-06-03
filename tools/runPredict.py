@@ -101,7 +101,8 @@ class Tester(object):
         input_signals = self.get_test_files()
         request_param = dict()
         request_param['skip_row'] = [1]
-        request_param['model_path'] = '/Users/changkong/ML/Signal Classification/project/model/ada.pkl'
+        request_param['model_path'] = ['/Users/changkong/ML/Signal Classification/project/model/ada.pkl']
+        #request_param['model_path'] = ['/Users/changkong/ML/Signal Classification/project/model/xgb.pkl']
         #request_param['model_path'] = '/Users/changkong/ML/Signal Classification/project/production/model.ada.2018.04.10/ada.pkl'
         time_cost = dict()
         for (shortname, input_signal) in input_signals:
