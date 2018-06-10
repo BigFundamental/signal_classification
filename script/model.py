@@ -8,44 +8,9 @@ import logging
 
 logger = logging.getLogger('server')
 
-class SimpleModel(object):
-    """
-    tradditional ML model for signal classify
-    """
-    
-    def __init__(self):
-        self.featureExtractor = FeatureExtractor()
-
-    def predict(self, signal, params):
-        """
-        0 is good, otherwise 1
-        binary prediction
-        """
-        predict_result = 0
-        return predict_result
-
-    def train(self, signals, labels):
-        """
-        signals is two dimensional signal arrays
-        label is the expect result
-        """
-        # transform singals into features
-
-        # split into train-set & eval-set
-
-        # training & get training-eval & loss
-
-        # evaluation
-        return model
-
-    def getFeatures(self, signals):
-        """
-        """
-    
-    def getFeature(self, signals):
-
-
-
-
-
-
+ModelVersionFeatureConfig = {
+        "ada_0830_B" : {"features": ['peaks_num', 'up_edges_num', 'down_edges_num', 'down_peaks_num', 'peak_edge_ratio', 'down_peak_edge_ratio', 'edge_diff_10', 'edge_diff_20', 'edge_diff_50', 'width_diff_10'], "path": "model.ada.2018.06.04"},
+        "gbdt_0830_B" : {"features": ['peaks_num', 'up_edges_num', 'down_edges_num', 'down_peaks_num', 'peak_edge_ratio', 'down_peak_edge_ratio', 'edge_diff_10', 'edge_diff_20', 'edge_diff_50', 'width_diff_10', 'negative_peak_num'], "path": "model.gbdt.2018.06.08"},
+        "gbdt_0830_BA" : {"features": ['peaks_num', 'up_edges_num', 'down_edges_num', 'down_peaks_num', 'peak_edge_ratio', 'down_peak_edge_ratio', 'edge_diff_10', 'edge_diff_20', 'width_diff_10', 'negative_peak_num', 'max_down_peak_point'], "path": "model.gbdt.2018.06.10"},
+        "test": {"features": ['peaks_num', 'up_edges_num', 'down_edges_num', 'down_peaks_num', 'peak_edge_ratio', 'down_peak_edge_ratio', 'edge_diff_10', 'edge_diff_20', 'width_diff_10', 'negative_peak_num', 'max_down_peak_point'], "path": "model.test"}
+}

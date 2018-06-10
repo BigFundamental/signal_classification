@@ -195,6 +195,11 @@ class FeatureExtractor(object):
             height_list.append(abs(signals[r_b] - signals[l_b]))
         return height_list
 
+    def valley(self, signals):
+        """
+        return valley point in signals
+        """
+        return np.min(signals)
     def outlierPointNum(self, signals, threshold, cmp_func):
         """
         outlier numbers

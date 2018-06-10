@@ -8,7 +8,8 @@ import urllib, urllib2
 import json
 sys.path.append("./script/")
 reload(sys)
-from signal_manager import SignalMgr 
+from signal_manager import SignalMgr
+from model import ModelVersionFeatureConfig 
 #import SignalMgr
 
 
@@ -102,6 +103,7 @@ class Tester(object):
         request_param = dict()
         request_param['skip_row'] = [1]
         request_param['model_path'] = ['/Users/changkong/ML/Signal Classification/project/model/ada.pkl']
+        request_param['model_version'] = 'gbdt_0830_B'
         #request_param['model_path'] = ['/Users/changkong/ML/Signal Classification/project/model/xgb.pkl']
         #request_param['model_path'] = '/Users/changkong/ML/Signal Classification/project/production/model.ada.2018.04.10/ada.pkl'
         time_cost = dict()

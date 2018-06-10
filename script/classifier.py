@@ -6,6 +6,7 @@ from filter import Filter
 from feature_extractor import FeatureExtractor
 import logging
 import os
+from model import ModelVersionFeatureConfig
 from sklearn.externals import joblib
 
 logger = logging.getLogger('server')
@@ -23,16 +24,21 @@ class Classifier(object):
     FLAW_TYPE_TWO_MANY_DOWN_PEAKS = 6
     ERR_RET_PARAM = dict({'stat': 1, 'reason': 0, 'speed': 0})
 
-    def __init__(self, model_path=''):
+    def __init__(self, model_path='', model_version=''):
         self.featureExtractor = FeatureExtractor()
         self.features = dict()
+        self.wanted_features = []
+
+        if model_version != '' and ModelVersionFeatureConfig.has_key(model_version):
+            self.wanted_features = ModelVersionFeatureConfig[model_version]['features']
+            model_path = os.path.sep.join([os.path.dirname(os.path.abspath(__file__)), '..', 'production', ModelVersionFeatureConfig[model_version]['path'],'model.pkl'])
+
         if model_path == 'train':
             return
         if model_path != '':
             self.model = joblib.load(model_path)
         else:
-            #self.model = joblib.load(os.path.abspath('..') + os.sep + "model" + os.sep + "ada.pkl")
-            self.model = joblib.load(os.path.abspath('..') + os.sep + "model" + os.sep + "xgb.pkl")
+            self.model = joblib.load(os.path.abspath('..') + os.sep + "model" + os.sep + "model.pkl")
 
     def normalize_signals(self, signals):
         """
@@ -76,7 +82,10 @@ class Classifier(object):
         return retParam
     
     def get_feature_vec(self, features):
-        feature_list = sorted(self.get_feature_list())
+        if len(self.wanted_features) > 0:
+            feature_list = sorted(self.wanted_features)
+        else:
+            feature_list = sorted(self.get_feature_list())
         fea_vec = np.zeros(len(feature_list))
         for i in xrange(len(feature_list)):
             fea_vec[i] = features[feature_list[i]]
@@ -104,6 +113,7 @@ class Classifier(object):
         feature_dict['peaks'] = self.getPeakLoc_(signals, params)
         feature_dict['down_peaks'] = self.getDownPeakLoc_(signals, params)
         feature_dict['negative_peak_num'] = self.getNegativePeakNum_(raw_signals, params)
+        feature_dict['max_down_peak_point'] = self.getExtremeDownPeakVal_(raw_signals, params)
         feature_dict['up_edges'] = self.getUpEdges_(signals, params)
         feature_dict['down_edges'] = self.getDownEdges_(signals, params)
         feature_dict['peaks_num'] = len(feature_dict['peaks'])
@@ -229,7 +239,13 @@ class Classifier(object):
         return total negative downpeak numbers
         NOTICE: input signals should be raw signals
         """
-        return self.featureExtractor.outlierPointNum(raw_signals, 0, lambda x, y: x < y)
+        return self.featureExtractor.outlierPointNum(raw_signals, 0, lambda x, y: x <= y)
+
+    def getExtremeDownPeakVal_(self, raw_signals, params):
+        """
+        return extreme down peak values
+        """
+        return self.featureExtractor.valley(raw_signals)
 
     def getDownPeakLoc_(self, signals, params):
         """

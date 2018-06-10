@@ -36,7 +36,8 @@ class SignalMgr(object):
            'COLUMN_NUM': 1,
            'SAMPLING_DT': 0.00004,
            'SPEED_LOWER_BOUND':12300,
-           'SPEED_UPPER_BOUND':15500
+           'SPEED_UPPER_BOUND':15500,
+           'DEFAULT_MODEL_VERSION':'gbdt_0830_BA'
    }
 
    def __init__(self):
@@ -48,7 +49,7 @@ class SignalMgr(object):
        if request_param.has_key('model_path'):
            classifier = Classifier(model_path = request_param['model_path'][0])
        else:
-           classifier = Classifier()
+           classifier = Classifier(model_version=SignalMgr['DEFAULT_MODEL_VERSION'])
        return classifier.get_features(raw_signals, SignalMgr.signalParams, request_param)
 
    def process(self, file_path, request_param = dict()):
@@ -63,7 +64,9 @@ class SignalMgr(object):
        #        easing later threshold variance between different channels
        #normalized_signals = self.normalize_signals(raw_signals)
        # step3: using classifier to detects potential signals with pitfalls
-       if request_param.has_key('model_path'):
+       if request_param.has_key('model_version'):
+           classifier = Classifier(model_version = request_param['model_version'])
+       elif request_param.has_key('model_path'):
            classifier = Classifier(model_path = request_param['model_path'][0])
        else:
            classifier = Classifier()
