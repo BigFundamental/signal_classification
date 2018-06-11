@@ -49,7 +49,7 @@ class SignalMgr(object):
        if request_param.has_key('model_path'):
            classifier = Classifier(model_path = request_param['model_path'][0])
        else:
-           classifier = Classifier(model_version=SignalMgr['DEFAULT_MODEL_VERSION'])
+           classifier = Classifier(model_version=SignalMgr.signalParams['DEFAULT_MODEL_VERSION'])
        return classifier.get_features(raw_signals, SignalMgr.signalParams, request_param)
 
    def process(self, file_path, request_param = dict()):
@@ -69,7 +69,7 @@ class SignalMgr(object):
        elif request_param.has_key('model_path'):
            classifier = Classifier(model_path = request_param['model_path'][0])
        else:
-           classifier = Classifier()
+           classifier = Classifier(model_version=SignalMgr.signalParams['DEFAULT_MODEL_VERSION'])
        
        return classifier.predict(raw_signals, SignalMgr.signalParams, request_param)
   
