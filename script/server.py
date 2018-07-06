@@ -39,6 +39,7 @@ class Handler(BaseHTTPRequestHandler):
         jsonRetParam['errorCode'] = 0
         jsonRetParam['resultCode'] = 0
         jsonRetParam['speed'] = 0
+        jsonRetParam['speedResult'] = 0
         try:
             params = self.get_params_()
             #print "debug_params:", params
@@ -48,11 +49,13 @@ class Handler(BaseHTTPRequestHandler):
             jsonRetParam['resultCode'] = pred_ret['stat']
             jsonRetParam['speed'] = pred_ret['speed']
             jsonRetParam['reason'] = pred_ret['reason']
+            jsonRetParam['speedResult'] = pred_ret['speedResult']
         except:
             traceback.print_exc()
             jsonRetParam['errorCode'] = 1
             jsonRetParam['speed'] = 0
             jsonRetParam['reason'] = -1
+            jsonRetParam['speedResult'] = 1
         self.wfile.write(json.dumps(jsonRetParam))
         return
 
