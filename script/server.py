@@ -50,12 +50,14 @@ class Handler(BaseHTTPRequestHandler):
             jsonRetParam['speed'] = pred_ret['speed']
             jsonRetParam['reason'] = pred_ret['reason']
             jsonRetParam['speedResult'] = pred_ret['speedResult']
+            jsonRetParam['waveResult'] = pred_ret['waveResult']
         except:
             traceback.print_exc()
             jsonRetParam['errorCode'] = 1
             jsonRetParam['speed'] = 0
             jsonRetParam['reason'] = -1
             jsonRetParam['speedResult'] = 1
+            jsonRetParam['waveResult'] = 1
         self.wfile.write(json.dumps(jsonRetParam))
         return
 

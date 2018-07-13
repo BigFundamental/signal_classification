@@ -67,6 +67,7 @@ class Classifier(object):
         retParam['reason'] = -1
         retParam['speed'] = 0
         retParam['speedResult'] = 0
+        retParam['waveResult'] = result
 
         # calculate speed
         samplerate = request_params.get('samplerate', [params['SAMPLING_DT']])[0]
