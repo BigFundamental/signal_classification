@@ -33,7 +33,7 @@ class Classifier(object):
             self.wanted_features = ModelVersionFeatureConfig[model_version]['features']
             model_path = os.path.sep.join([os.path.dirname(os.path.abspath(__file__)), '..', 'production', ModelVersionFeatureConfig[model_version]['path'],'model.pkl'])
 
-        if model_path == 'train':
+        if model_path == 'train' or model_path == None:
             return
         if model_path != '':
             self.model = joblib.load(model_path)
@@ -52,8 +52,40 @@ class Classifier(object):
         """
         return 0 if signal is normal, otherwise -1
         """
-        #return self.predictWithReason(signals, params, request_params)
+        if request_params['mode'] == 'speed':
+            return self.predictSpeedOnly(signals, params, request_params)
+        
         return self.predictWithModel(signals, params, request_params)
+
+    def predictSpeedOnly(self, raw_signals, params, request_params = dict()):
+        """
+        predict signals' speed only
+        """
+        f = self.get_features(raw_signals, params, request_params)
+        self.upwardsEdges = f['up_edges']
+        self.downwardsEdges = f['down_edges']
+        
+        retParam = dict()
+        retParam['stat'] = 0
+        retParam['reason'] = -1
+        retParam['speed'] = 0
+        retParam['speedResult'] = 0
+        retParam['waveResult'] = 0
+        
+        # calculate speed
+        samplerate = request_params.get('samplerate', [params['SAMPLING_DT']])[0]
+        retParam['speed'] = self.calcSpeed(raw_signals, params, float(samplerate))
+
+        #judge speeds
+        speed_lower_bound = int(request_params.get('speed_lower_bound', [params['SPEED_LOWER_BOUND']])[0])
+        speed_upper_bound = int(request_params.get('speed_upper_bound', [params['SPEED_UPPER_BOUND']])[0])
+        if retParam['speed'] < speed_lower_bound or retParam['speed'] > speed_upper_bound:
+            retParam['speedResult']= 1
+        
+        if retParam['speedResult'] == 1:
+            retParam['stat']= 1
+            retParam['reason'] = Classifier.FLAW_TYPE_SPEED_INVALID
+        return retParam
 
     def predictWithModel(self, raw_signals, params, request_params = dict()):
         f = self.get_features(raw_signals, params, request_params)

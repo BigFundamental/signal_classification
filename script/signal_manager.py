@@ -64,6 +64,10 @@ class SignalMgr(object):
        #        easing later threshold variance between different channels
        #normalized_signals = self.normalize_signals(raw_signals)
        # step3: using classifier to detects potential signals with pitfalls
+       if request_param.has_key('mode') and request_param['mode'] == 'speed':
+           # speed mode, no need to load model, specify model_path to None
+           request_param['model_path'] = [None]
+       
        if request_param.has_key('model_version'):
            classifier = Classifier(model_version = request_param['model_version'])
        elif request_param.has_key('model_path'):
@@ -98,7 +102,6 @@ class SignalMgr(object):
            line_no = 0
        header_params['lineno'] = line_no
        return header_params
-
    
    def parse_signals_from_file(self, fpath, skip_rows = 0):
        """

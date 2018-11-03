@@ -27,8 +27,11 @@ class Handler(BaseHTTPRequestHandler):
 
     def get_params_(self):
         query_components = parse_qs(urlparse(unquote(self.path)).query)
-        #logger.debug('raw GET params: [%s]' % unquote(self.path))
-        #logger.debug('request params: %s' % str(query_components))
+        mode = urlparse(unquote(self.path)).path.strip('/')
+        query_components['mode'] = mode
+        #logger.debug("orig_path: %s" % self.path)
+        #logger.debug("parsed_path: %s" % urlparse(unquote(self.path)).path)
+        #logger.debug("key:val:pairs: %s" % query_components)
         return query_components
 
     def do_GET(self):
