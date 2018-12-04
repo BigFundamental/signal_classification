@@ -61,7 +61,8 @@ class Classifier(object):
         """
         predict signals' speed only
         """
-        f = self.get_features(raw_signals, params, request_params)
+        feature_masks = []
+        f = self.get_speed_features(raw_signals, params)
         self.upwardsEdges = f['up_edges']
         self.downwardsEdges = f['down_edges']
         
@@ -88,9 +89,8 @@ class Classifier(object):
         return retParam
 
     def predictWithModel(self, raw_signals, params, request_params = dict()):
-        f = self.get_features(raw_signals[0:1024], params, request_params)
-        #self.upwardsEdges = f['up_edges']
-        #self.downwardsEdges = f['down_edges']
+        feature_masks = self.wanted_features if len(self.wanted_features) > 0 else  None
+        f = self.get_features(raw_signals[0:1024], params, request_params, feature_masks=feature_masks)
         feature = self.get_feature_vec(f)
         result = int(self.model.predict(feature)[0])
         
@@ -135,49 +135,85 @@ class Classifier(object):
         predefined feature lists, order is sensitive
         """
         return ['peaks_num', 'up_edges_num', 'down_edges_num', 'down_peaks_num', 'peak_edge_ratio', 'down_peak_edge_ratio', 'edge_diff_10', 'edge_diff_20', 'edge_diff_50', 'width_diff_10', 'negative_peak_num']
+    
+    def get_speed_features(self, raw_signals, params, enable_normalization=True):
+        """
+        shortened feature extractions
+        """
+        signals_length = len(raw_signals)
+        feature_dict = dict()
+        if enable_normalization:
+            signals = self.normalize_signals(raw_signals)
+        else:
+            signals = raw_signals
+        feature_dict['normalize_signals'] = signals
+        feature_dict['up_edges'] = self.getUpEdges_(signals, params)
+        feature_dict['down_edges'] = self.getDownEdges_(signals, params)
+        return feature_dict
 
-    def get_features(self, raw_signals, params, request_params = dict()):
+    def get_features(self, raw_signals, params, enable_normalization=True, request_params=dict(), feature_masks=None):
         """
         calculate features dicts
         """
         signal_length = len(raw_signals)
         feature_dict = dict()
+        if feature_masks != None:
+            feature_masks = set(feature_masks)
         if 0 == signal_length:
             return feature_dict
-
-        signals = self.normalize_signals(raw_signals)
+        
+        if enable_normalization:
+            signals = self.normalize_signals(raw_signals)
+        else:
+            signals = raw_signals
         # tracing & debuging features, for visualizations
         feature_dict['normalized_signals'] = signals
-        # get peaks / edges
+        # get peaks / edges, basic features:
         feature_dict['peaks'] = self.getPeakLoc_(signals, params)
         feature_dict['down_peaks'] = self.getDownPeakLoc_(signals, params)
         feature_dict['negative_peak_num'] = self.getNegativePeakNum_(raw_signals, params)
         feature_dict['max_down_peak_point'] = self.getExtremeDownPeakVal_(raw_signals, params)
         feature_dict['up_edges'] = self.getUpEdges_(signals, params)
         feature_dict['down_edges'] = self.getDownEdges_(signals, params)
-        feature_dict['peaks_num'] = len(feature_dict['peaks'])
-        feature_dict['down_peaks_num'] = len(feature_dict['down_peaks'])
-        feature_dict['up_edges_num'] = len(feature_dict['up_edges'])
-        feature_dict['down_edges_num'] = len(feature_dict['down_edges'])
-        if feature_dict['up_edges_num'] + feature_dict['down_edges_num'] != 0:
-            feature_dict['peak_edge_ratio'] = feature_dict['peaks_num'] * 1.0 / ((feature_dict['up_edges_num'] + feature_dict['down_edges_num']) / 2.0)
-            feature_dict['down_peak_edge_ratio'] = feature_dict['down_peaks_num'] * 1.0 / ((feature_dict['up_edges_num'] + feature_dict['down_edges_num']) / 2.0)
+
+        # combined features
+        if not feature_masks or 'peaks_num' in feature_masks:
+            feature_dict['peaks_num'] = len(feature_dict['peaks'])
+        if not feature_masks or 'down_peaks_num' in feature_masks:
+            feature_dict['down_peaks_num'] = len(feature_dict['down_peaks'])
+        if not feature_masks or 'up_edges_num' in feature_masks:
+            feature_dict['up_edges_num'] = len(feature_dict['up_edges'])
+        if not feature_masks or 'down_edges_num' in feature_masks:
+            feature_dict['down_edges_num'] = len(feature_dict['down_edges'])
+        if (not feature_masks or ['up_edges_num', 'down_edges_num'] <= feature_masks) and feature_dict['up_edges_num'] + feature_dict['down_edges_num'] != 0:
+            if not feature_masks or ['peak_edge_ratio', 'peaks_num'] <= feature_masks:
+                feature_dict['peak_edge_ratio'] = feature_dict['peaks_num'] * 1.0 / ((feature_dict['up_edges_num'] + feature_dict['down_edges_num']) / 2.0)
+            if not feature_masks or ['down_peak_edge_ratio', 'down_peaks_num'] <= feature_masks:
+                feature_dict['down_peak_edge_ratio'] = feature_dict['down_peaks_num'] * 1.0 / ((feature_dict['up_edges_num'] + feature_dict['down_edges_num']) / 2.0)
         else:
             feature_dict['peak_edge_ratio'] = 0.0
             feature_dict['down_peak_edge_ratio'] = 0.0
 
-        feature_dict['up_edge_height'] = self.getEdgeHeight_(signals, feature_dict['up_edges'])
-        feature_dict['down_edge_height'] = self.getEdgeHeight_(signals, feature_dict['down_edges'])
-        feature_dict['paired_edges'] = self.getPairedEdges_(params, feature_dict['up_edges'], feature_dict['down_edges'])
+        if not feature_masks or ['up_edges', 'up_edge_height'] <= feature_masks:
+            feature_dict['up_edge_height'] = self.getEdgeHeight_(signals, feature_dict['up_edges'])
+        if not feature_masks or ['down_edge_height', 'down_edges'] <= feature_masks:
+            feature_dict['down_edge_height'] = self.getEdgeHeight_(signals, feature_dict['down_edges'])
+        if not feature_masks or ['up_edges', 'down_edges'] <= feature_masks:
+            feature_dict['paired_edges'] = self.getPairedEdges_(params, feature_dict['up_edges'], feature_dict['down_edges'])
         # 上下沿对比数据
         feature_dict['paired_edge_height'] = self.getPairedEdgeHeight_(signals, feature_dict['paired_edges'])
         feature_dict['paired_edge_height_diff'] = sorted(self.getPairedEdgeDifference_(feature_dict['paired_edge_height']), reverse=True)
+
         # 获取上下沿边的长度diff分位数据
         if len(feature_dict['paired_edge_height_diff']) != 0:
-            feature_dict['edge_diff_10'] = np.percentile(feature_dict['paired_edge_height_diff'], 90)
-            feature_dict['edge_diff_20'] = np.percentile(feature_dict['paired_edge_height_diff'], 80)
-            feature_dict['edge_diff_30'] = np.percentile(feature_dict['paired_edge_height_diff'], 70)
-            feature_dict['edge_diff_50'] = np.percentile(feature_dict['paired_edge_height_diff'], 50)
+            if not feature_masks or 'edge_diff_10' in feature_masks:
+                feature_dict['edge_diff_10'] = np.percentile(feature_dict['paired_edge_height_diff'], 90)
+            if not feature_masks or 'edge_diff_20' in feature_masks:
+                feature_dict['edge_diff_20'] = np.percentile(feature_dict['paired_edge_height_diff'], 80)
+            if not feature_masks or 'edge_diff_30' in feature_masks:
+                feature_dict['edge_diff_30'] = np.percentile(feature_dict['paired_edge_height_diff'], 70)
+            if not feature_masks or 'edge_diff_50' in feature_masks:
+                feature_dict['edge_diff_50'] = np.percentile(feature_dict['paired_edge_height_diff'], 50)
         else:
             feature_dict['edge_diff_10'] = 100
             feature_dict['edge_diff_20'] = 100
@@ -188,11 +224,16 @@ class Classifier(object):
         # 上下边缘对比数据
         feature_dict['paired_edge_width'] = self.getPairedEdgeUpperBottomWidth_(signals, feature_dict['paired_edges'])
         feature_dict['paired_edge_width_diff'] = sorted(self.getPairedWidthDifference_(feature_dict['paired_edge_width']), reverse=True)
+
         if len(feature_dict['paired_edge_width_diff']) != 0:
-            feature_dict['width_diff_10'] = np.percentile(feature_dict['paired_edge_width_diff'], 90)
-            feature_dict['width_diff_20'] = np.percentile(feature_dict['paired_edge_width_diff'], 80)
-            feature_dict['width_diff_30'] = np.percentile(feature_dict['paired_edge_width_diff'], 70)
-            feature_dict['width_diff_50'] = np.percentile(feature_dict['paired_edge_width_diff'], 50)
+            if not feature_masks or 'width_diff_10' in feature_masks:
+                feature_dict['width_diff_10'] = np.percentile(feature_dict['paired_edge_width_diff'], 90)
+            if not feature_masks or 'width_diff_20' in feature_masks:
+                feature_dict['width_diff_20'] = np.percentile(feature_dict['paired_edge_width_diff'], 80)
+            if not feature_masks or 'width_diff_30' in feature_masks:
+                feature_dict['width_diff_30'] = np.percentile(feature_dict['paired_edge_width_diff'], 70)
+            if not feature_masks or 'width_diff_50' in feature_masks:
+                feature_dict['width_diff_50'] = np.percentile(feature_dict['paired_edge_width_diff'], 50)
         else:
             feature_dict['width_diff_10'] = 100
             feature_dict['width_diff_20'] = 100
