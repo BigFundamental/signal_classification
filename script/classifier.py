@@ -88,9 +88,9 @@ class Classifier(object):
         return retParam
 
     def predictWithModel(self, raw_signals, params, request_params = dict()):
-        f = self.get_features(raw_signals, params, request_params)
-        self.upwardsEdges = f['up_edges']
-        self.downwardsEdges = f['down_edges']
+        f = self.get_features(raw_signals[0:1024], params, request_params)
+        #self.upwardsEdges = f['up_edges']
+        #self.downwardsEdges = f['down_edges']
         feature = self.get_feature_vec(f)
         result = int(self.model.predict(feature)[0])
         
@@ -101,17 +101,20 @@ class Classifier(object):
         retParam['speedResult'] = 0
         retParam['waveResult'] = result
 
-        # calculate speed
-        samplerate = request_params.get('samplerate', [params['SAMPLING_DT']])[0]
-        #samplerate = request_params.get('samplerate', params['SAMPLING_DT']) 
-        retParam['speed'] = self.calcSpeed(raw_signals, params, float(samplerate))
+        speed_params = self.predictSpeedOnly(raw_signals, params, request_params)
+        retParam['speed'] = speed_params['speed']
+        retParam['speedResult'] = speed_params['speedResult']
+       # calculate speed
+       # samplerate = request_params.get('samplerate', [params['SAMPLING_DT']])[0]
+       # #samplerate = request_params.get('samplerate', params['SAMPLING_DT']) 
+       # retParam['speed'] = self.calcSpeed(raw_signals, params, float(samplerate))
 
-        #judge speeds
-        speed_lower_bound = int(request_params.get('speed_lower_bound', [params['SPEED_LOWER_BOUND']])[0])
-        speed_upper_bound = int(request_params.get('speed_upper_bound', [params['SPEED_UPPER_BOUND']])[0])
-        if retParam['speed'] < speed_lower_bound or retParam['speed'] > speed_upper_bound:
-            retParam['speedResult']= 1
-        
+       # #judge speeds
+       # speed_lower_bound = int(request_params.get('speed_lower_bound', [params['SPEED_LOWER_BOUND']])[0])
+       # speed_upper_bound = int(request_params.get('speed_upper_bound', [params['SPEED_UPPER_BOUND']])[0])
+       # if retParam['speed'] < speed_lower_bound or retParam['speed'] > speed_upper_bound:
+       #     retParam['speedResult']= 1
+       # 
         if result == 0 and retParam['speedResult'] == 1:
             retParam['stat']= 1
             retParam['reason'] = Classifier.FLAW_TYPE_SPEED_INVALID
