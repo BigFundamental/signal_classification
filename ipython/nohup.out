@@ -1,0 +1,60 @@
+[I 21:59:54.332 NotebookApp] [nb_conda_kernels] enabled, 1 kernels found
+[I 21:59:56.217 NotebookApp] The port 8888 is already in use, trying another port.
+[I 21:59:56.266 NotebookApp] JupyterLab alpha preview extension loaded from /Users/changkong/anaconda3/lib/python3.6/site-packages/jupyterlab
+JupyterLab v0.27.0
+Known labextensions:
+[I 21:59:56.271 NotebookApp] Running the core application with no additional extensions or settings
+[I 21:59:56.282 NotebookApp] [nb_conda] enabled
+[I 21:59:56.287 NotebookApp] Serving notebooks from local directory: /Users/changkong/project/signal_classification/ipython
+[I 21:59:56.287 NotebookApp] 0 active kernels 
+[I 21:59:56.287 NotebookApp] The Jupyter Notebook is running at: http://localhost:8889/?token=614b3721cbbe55551dcc50640547b84c1ed13569484fc829
+[I 21:59:56.288 NotebookApp] Use Control-C to stop this server and shut down all kernels (twice to skip confirmation).
+[C 21:59:56.291 NotebookApp] 
+    
+    Copy/paste this URL into your browser when you connect for the first time,
+    to login with a token:
+        http://localhost:8889/?token=614b3721cbbe55551dcc50640547b84c1ed13569484fc829
+[I 21:59:56.657 NotebookApp] Accepting one-time-token-authenticated connection from ::1
+[I 22:06:14.308 NotebookApp] Kernel started: 3bdbd048-e73d-4bb3-ad93-0bbafde6de59
+[I 22:06:16.400 NotebookApp] Adapting to protocol v5.1 for kernel 3bdbd048-e73d-4bb3-ad93-0bbafde6de59
+[I 23:55:47.145 NotebookApp] Saving file at /斜角波形分析及特征制作.ipynb
+[I 23:56:00.253 NotebookApp] Saving file at /斜角波形分析及特征制作.ipynb
+[C 23:56:18.554 NotebookApp] received signal 15, stopping
+[I 23:56:18.569 NotebookApp] Shutting down kernels
+[I 23:56:18.675 NotebookApp] Kernel shutdown: 3bdbd048-e73d-4bb3-ad93-0bbafde6de59
+[I 23:56:34.970 NotebookApp] [nb_conda_kernels] enabled, 1 kernels found
+[I 23:56:36.678 NotebookApp] JupyterLab alpha preview extension loaded from /Users/changkong/anaconda3/lib/python3.6/site-packages/jupyterlab
+JupyterLab v0.27.0
+Known labextensions:
+[I 23:56:36.683 NotebookApp] Running the core application with no additional extensions or settings
+[I 23:56:36.694 NotebookApp] [nb_conda] enabled
+[I 23:56:36.699 NotebookApp] Serving notebooks from local directory: /Users/changkong/project/signal_classification/ipython
+[I 23:56:36.700 NotebookApp] 0 active kernels 
+[I 23:56:36.700 NotebookApp] The Jupyter Notebook is running at: http://localhost:8888/?token=5bff5b392b0df1a358387472d98eb52001d5e9635f03ad9b
+[I 23:56:36.700 NotebookApp] Use Control-C to stop this server and shut down all kernels (twice to skip confirmation).
+[C 23:56:36.701 NotebookApp] 
+    
+    Copy/paste this URL into your browser when you connect for the first time,
+    to login with a token:
+        http://localhost:8888/?token=5bff5b392b0df1a358387472d98eb52001d5e9635f03ad9b
+[W 23:56:37.036 NotebookApp] 404 GET /api/kernels/ccf83d4a-8dd6-4084-adbf-86544545cd7b/channels?session_id=82B5E95787CE43E8A490F184726EEA8E (::1): Kernel does not exist: ccf83d4a-8dd6-4084-adbf-86544545cd7b
+[W 23:56:37.232 NotebookApp] 404 GET /api/kernels/ccf83d4a-8dd6-4084-adbf-86544545cd7b/channels?session_id=82B5E95787CE43E8A490F184726EEA8E (::1) 307.87ms referer=None
+[I 23:56:37.235 NotebookApp] Accepting one-time-token-authenticated connection from ::1
+[I 23:56:44.077 NotebookApp] Kernel started: 26f83cb6-a611-4037-9a1a-9fd44b3a8cf9
+[I 23:56:46.116 NotebookApp] Adapting to protocol v5.1 for kernel 26f83cb6-a611-4037-9a1a-9fd44b3a8cf9
+[W 23:56:53.891 NotebookApp] Replacing stale connection: ccf83d4a-8dd6-4084-adbf-86544545cd7b:82B5E95787CE43E8A490F184726EEA8E
+[I 23:57:05.637 NotebookApp] Kernel interrupted: 26f83cb6-a611-4037-9a1a-9fd44b3a8cf9
+[I 23:58:52.681 NotebookApp] Saving file at /斜角波形分析及特征制作.ipynb
+[W 00:01:26.922 NotebookApp] Replacing stale connection: ccf83d4a-8dd6-4084-adbf-86544545cd7b:82B5E95787CE43E8A490F184726EEA8E
+[W 00:06:31.961 NotebookApp] Replacing stale connection: ccf83d4a-8dd6-4084-adbf-86544545cd7b:82B5E95787CE43E8A490F184726EEA8E
+[I 00:10:44.165 NotebookApp] Saving file at /斜角波形分析及特征制作.ipynb
+[I 00:12:44.180 NotebookApp] Saving file at /斜角波形分析及特征制作.ipynb
+[I 00:40:43.297 NotebookApp] Saving file at /斜角波形分析及特征制作.ipynb
+[I 11:01:17.297 NotebookApp] Kernel started: 00c2ffc5-ab77-4860-aeca-432791585dc5
+[I 11:01:18.975 NotebookApp] Adapting to protocol v5.1 for kernel 00c2ffc5-ab77-4860-aeca-432791585dc5
+[I 11:01:40.054 NotebookApp] Saving file at /斜角波形分析及特征制作.ipynb
+[I 11:05:40.075 NotebookApp] Saving file at /斜角波形分析及特征制作.ipynb
+[I 11:15:40.149 NotebookApp] Saving file at /斜角波形分析及特征制作.ipynb
+[I 11:19:40.179 NotebookApp] Saving file at /斜角波形分析及特征制作.ipynb
+[I 11:23:40.210 NotebookApp] Saving file at /斜角波形分析及特征制作.ipynb
+[I 11:29:39.419 NotebookApp] Saving file at /斜角波形分析及特征制作.ipynb

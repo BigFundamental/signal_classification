@@ -52,7 +52,7 @@ class Classifier(object):
         """
         return 0 if signal is normal, otherwise -1
         """
-        if request_params['mode'] == 'speed':
+        if 'mode' in request_params.keys() and request_params['mode'] == 'speed':
             return self.predictSpeedOnly(signals, params, request_params)
         
         return self.predictWithModel(signals, params, request_params)
