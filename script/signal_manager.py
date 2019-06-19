@@ -37,11 +37,20 @@ class SignalMgr(object):
            'SAMPLING_DT': 0.00004,
            'SPEED_LOWER_BOUND':12300,
            'SPEED_UPPER_BOUND':15500,
-           'DEFAULT_MODEL_VERSION':'gbdt_0830_BA'
+           'DEFAULT_MODEL_VERSION':'gbdt_0830BA_SKEW_LS'
    }
 
    def __init__(self):
        self.debug_info = dict()
+
+   def get_speed_features(self, file_path, request_param=dict()):
+       dt, raw_signals = self.parse_signals_from_file(file_path, int(request_param.get('skip_row', [0])[0]))
+
+       if request_param.has_key('model_path'):
+           classifier = Classifier(model_path = request_param['model_path'][0])
+       else:
+           classifier = Classifier(model_version=SignalMgr.signalParams['DEFAULT_MODEL_VERSION'])
+       return classifier.get_speed_features(raw_signals, SignalMgr.signalParams)
 
    def get_features(self, file_path, request_param = dict()):
        dt, raw_signals = self.parse_signals_from_file(file_path, int(request_param.get('skip_row', [0])[0]))

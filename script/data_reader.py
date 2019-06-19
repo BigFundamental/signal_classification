@@ -95,6 +95,7 @@ class DataReader(object):
          case_root = os.path.dirname(result_path)
          case_info_df = self.get_signal_list(case_root)
          schemas = self.detect_schema(result_path)
+         # schemas:整体比对结果，手动标定结果，波形结果，转速结果，转速值
          if 'channel_id' not in schemas:
              result_df = pd.read_csv(result_path, header = None, skiprows=1, names=schemas, usecols=[0, 2, 3], converters={'reason':iconverter, 'expect_result':iconverter})
              result_df['channel_id'] = 1

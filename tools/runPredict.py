@@ -51,7 +51,7 @@ class Tester(object):
         """
         request param to url params
         """
-        request_param = {'skip_row':request_param['skip_row'][0], 'model_path':request_param['model_path'], 'speed_lower_bound':0, 'speed_upper_bound':20000, 'filepath':input_signal}
+        request_param = {'skip_row':request_param['skip_row'][0], 'speed_lower_bound':0, 'speed_upper_bound':20000, 'filepath':input_signal}
         return self.request_url % (urllib.urlencode(request_param))
 
     def search_test_files(self, root_path, file_name):
@@ -102,8 +102,8 @@ class Tester(object):
         input_signals = self.get_test_files()
         request_param = dict()
         request_param['skip_row'] = [1]
-        request_param['model_path'] = ['/Users/changkong/ML/Signal Classification/project/model/ada.pkl']
-        request_param['model_version'] = 'gbdt_0830_B'
+        #request_param['model_path'] = ['/Users/changkong/ML/Signal Classification/project/model/ada.pkl']
+        #request_param['model_version'] = 'gbdt_0830_B'
         #request_param['model_path'] = ['/Users/changkong/ML/Signal Classification/project/model/xgb.pkl']
         #request_param['model_path'] = '/Users/changkong/ML/Signal Classification/project/production/model.ada.2018.04.10/ada.pkl'
         time_cost = dict()

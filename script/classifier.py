@@ -155,6 +155,7 @@ class Classifier(object):
         """
         calculate features dicts
         """
+        raw_signals = raw_signals[0:1024]
         signal_length = len(raw_signals)
         feature_dict = dict()
         if feature_masks != None:
@@ -163,9 +164,9 @@ class Classifier(object):
             return feature_dict
         
         if enable_normalization:
-            signals = self.normalize_signals(raw_signals)
+            signals = self.normalize_signals(raw_signals[0:1024])
         else:
-            signals = raw_signals
+            signals = raw_signals[0:1024]
         # tracing & debuging features, for visualizations
         feature_dict['normalized_signals'] = signals
         # get peaks / edges, basic features:
@@ -203,6 +204,25 @@ class Classifier(object):
         # 上下沿对比数据
         feature_dict['paired_edge_height'] = self.getPairedEdgeHeight_(signals, feature_dict['paired_edges'])
         feature_dict['paired_edge_height_diff'] = sorted(self.getPairedEdgeDifference_(feature_dict['paired_edge_height']), reverse=True)
+
+        # 获取波形单元间隔宽度数据
+        feature_dict['unit_interviene_length'] = self.getIntervieneLength_(feature_dict['paired_edges'])
+        feature_dict['unit_interviene_length_diff'] = self.getIntervieneLengthDifference_(feature_dict['unit_interviene_length'])
+        if len(feature_dict['unit_interviene_length_diff']) > 0:
+            feature_dict['inter_diff_mean'] = np.mean(feature_dict['unit_interviene_length_diff'])
+            feature_dict['inter_diff_delta'] = np.std(feature_dict['unit_interviene_length_diff'])
+        else:
+            feature_dict['inter_diff_mean'] = 0
+            feature_dict['inter_diff_delta'] = 0
+
+        # 获取波形单元间隔底部的不对称性角度
+        feature_dict['unit_interviene_skewness'] = self.getIntervieneSkewness_(signals, feature_dict['paired_edges'])
+        if len(feature_dict['unit_interviene_skewness']) > 0:
+            feature_dict['skewness_mean'] = np.mean(feature_dict['unit_interviene_skewness'])
+            feature_dict['skewness_delta'] = np.std(feature_dict['unit_interviene_skewness'])
+        else:
+            feature_dict['skewness_mean'] = 0
+            feature_dict['skewness_delta'] = 0
 
         # 获取上下沿边的长度diff分位数据
         if len(feature_dict['paired_edge_height_diff']) != 0:
@@ -377,6 +397,50 @@ class Classifier(object):
             bottom_width = abs(up_idx[0] - down_idx[1]) + 1
             up_down_width_paired_list.append((bottom_width, upper_width))
         return up_down_width_paired_list
+
+    def getIntervieneLength_(self, up_down_edge_pairs):
+        """
+        one up & one down edge forms a single unit
+        the length between them should have the same size
+        """
+        interviene_length_list = list()
+        for i in range(1, len(up_down_edge_pairs)):
+            prev_down_idx = up_down_edge_pairs[i - 1][1]
+            cur_up_idx = up_down_edge_pairs[i][0]
+            interviene_length_list.append(abs(prev_down_idx[1] - cur_up_idx[0]))
+        return interviene_length_list
+
+    def getIntervieneLengthDifference_(self, inter_length_list):
+        """
+        input is the difference lengths
+        the interviene length distribution should be Guassian
+        we can use Guassian normalization
+        """
+        differences_ = list()
+        for i in range(1, len(inter_length_list)):
+            differences_.append(abs(inter_length_list[i - 1] - inter_length_list[i]))
+        
+        return differences_
+
+    def getIntervieneSkewness_(self, signals, up_down_edge_pairs):
+        """
+        Interates through all edges
+        """
+        interviene_skewness = list()
+        for i in range(1, len(up_down_edge_pairs)):
+            down = up_down_edge_pairs[i - 1][1]
+            up = up_down_edge_pairs[i][0]
+            bottom1 = min(signals[up[0]], signals[up[1]])
+            bottom2 = min(signals[down[0]], signals[down[1]])
+            interviene_width = abs(up[0] - down[1]) + 1
+            interviene_skewness.append(abs(bottom1 - bottom2) * 1.0 / interviene_width)
+
+       # for (up, down) in up_down_edge_pairs:
+       #     bottom1 = min(signals[up[0]], signals[up[1]])
+       #     bottom2 = min(signals[down[0]], signals[down[1]])
+       #     interviene_width = abs(up[1] - down[0]) + 1
+       #     interviene_skewness.append(abs(bottom1 - bottom2) * 1.0 / interviene_width)
+        return interviene_skewness
 
     def getPairedEdgeDifference_(self, up_down_edge_height_paired_list):
         """

@@ -106,19 +106,21 @@ class FeatureExtractor(object):
         #print "consec, begin: %d end: %d" % (begin, end)
         # shrink boundaries
         # at least two points
-        while begin + 1 < end:
-            margin = abs(segment[begin] - segment[begin + 1])
-            if margin < thres_l:
-                begin = begin + 1
-            else:
-                break
-        # at least two points
-        while begin + 1 < end:
-            margin = abs(segment[end] - segment[end - 1])
-            if margin < thres_l:
-                end = end - 1
-            else:
-                break
+        if direction > 0:
+            while begin + 1 < end:
+                margin = abs(segment[begin] - segment[begin + 1])
+                if margin < thres_l:
+                    begin = begin + 1
+                else:
+                    break
+        else:
+            # at least two points
+            while begin + 1 < end and direction < 0:
+                margin = abs(segment[end] - segment[end - 1])
+                if margin < thres_l:
+                    end = end - 1
+                else:
+                    break
 
         return (begin, end)
 
