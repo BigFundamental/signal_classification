@@ -46,7 +46,6 @@ class FeatureExtractor(object):
         # non-max-suppress, reserve one highest pointers for peaks
         peaks = Filter.nms(peak_candidates, window_size, reverse)
 #        plt.plot(peaks)
-
         # threshold check, remove suspecious peaks
         idx = np.arange(0, len(signals))
         if not reverse:

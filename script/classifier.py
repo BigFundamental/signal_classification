@@ -205,6 +205,12 @@ class Classifier(object):
         feature_dict['paired_edge_height'] = self.getPairedEdgeHeight_(signals, feature_dict['paired_edges'])
         feature_dict['paired_edge_height_diff'] = sorted(self.getPairedEdgeDifference_(feature_dict['paired_edge_height']), reverse=True)
 
+        # 下拉及无头等缺陷的序列周期性检测
+        feature_dict['cyclic_nopeak_seq'] = self.unitMaskGenerate(feature_dict['peaks'], feature_dict['paired_edges'], flip=True)
+        feature_dict['cyclic_downpeak_seq'] = self.unitMaskGenerate(feature_dict['down_peaks'], feature_dict['paired_edges'])
+        feature_dict['cyclic_intense_nopeak'] =  self.cyclicIntense(feature_dict['cyclic_nopeak_seq'], params['PHRASE_NUM'])
+        feature_dict['cyclic_intense_downpeak'] = self.cyclicIntense(feature_dict['cyclic_downpeak_seq'], params['PHRASE_NUM'])
+
         # 获取波形单元间隔宽度数据
         feature_dict['unit_interviene_length'] = self.getIntervieneLength_(feature_dict['paired_edges'])
         feature_dict['unit_interviene_length_diff'] = self.getIntervieneLengthDifference_(feature_dict['unit_interviene_length'])
@@ -598,6 +604,7 @@ class Classifier(object):
         #invalid_ratio = invalid_cnt * 1.0 / len(paired_edges)
         self.edge_deltas = edge_deltas
         return np.std(edge_deltas) >= _unsymmetric_var
+    
     def signalDiagnosis(self, signals, params):
         """
         Rule assembled to classify & recognize signals
@@ -621,3 +628,55 @@ class Classifier(object):
         else:
             result = 0
         return (result, flawType)
+
+    def unitMaskGenerate(self, eventAxis, paired_edges, flip=False):
+        """
+        paired_edges divide signals into units
+        foreach unit we will give each signals a label-1 if eventAxis appears
+        if flip equals true, we will use 0 label for positive events
+        return list of masks
+        """
+        unit_num = len(paired_edges)
+        positive_label = 1
+        negtive_label = 0
+        if flip == True:
+            positive_label = 0
+            negtive_label = 1
+
+        unit_num = len(paired_edges) - 1
+        # initialize intial labels
+        masks = np.full(unit_num, negtive_label)
+        for i in range(0, unit_num):
+            left = paired_edges[i][0][0]
+            right = paired_edges[i + 1][0][0]
+            for j in eventAxis:
+                if j >= left and j < right:
+                    masks[i] = positive_label
+                    break
+
+        return masks.tolist()
+    
+    def cyclicIntense(self, seqs, interval):
+        cyclic_pair = 0
+        max_cyclic_pairs = 0
+        for i in range(0, interval):
+            cyclic_pair = 0
+            for j in range(i, len(seqs), interval):
+                if seqs[j] > 0:
+                    cyclic_pair += 1
+            max_cyclic_pairs = max(max_cyclic_pairs, cyclic_pair)
+        return max_cyclic_pairs
+
+   # def cyclicIntense(self, seqs, interval):
+   #     """
+   #     using auto self-correlation to calculate cyclic informations
+   #     """
+   #     periodic_pairs = 0.0
+   #     for i in range(0, len(seqs) - interval):
+   #         if seqs[i] == 1 and seqs[i + interval] == 1:
+   #             periodic_pairs += 1
+   #     #s = pd.Series(seqs)
+   #     #ret = s.autocorr(lag = interval)
+   #     #if pd.isna(ret):
+   #     #    ret = 0
+   #     return periodic_pairs
