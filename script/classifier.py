@@ -71,6 +71,7 @@ class Classifier(object):
         retParam['reason'] = -1
         retParam['speed'] = 0
         retParam['speedResult'] = 0
+        retParam['waveScore'] = 0
         retParam['waveResult'] = 0
         
         # calculate speed
@@ -93,6 +94,7 @@ class Classifier(object):
         f = self.get_features(raw_signals[0:1024], params, request_params, feature_masks=feature_masks)
         feature = self.get_feature_vec(f)
         result = int(self.model.predict(feature)[0])
+        score = self.model.predict_proba(feature)
         
         retParam = dict()
         retParam['stat'] = result
@@ -100,6 +102,7 @@ class Classifier(object):
         retParam['speed'] = 0
         retParam['speedResult'] = 0
         retParam['waveResult'] = result
+        retParam['waveScore'] = score
 
         speed_params = self.predictSpeedOnly(raw_signals, params, request_params)
         retParam['speed'] = speed_params['speed']
