@@ -102,7 +102,7 @@ class Classifier(object):
         retParam['speed'] = 0
         retParam['speedResult'] = 0
         retParam['waveResult'] = result
-        retParam['waveScore'] = score
+        retParam['waveScore'] = score[1]
 
         speed_params = self.predictSpeedOnly(raw_signals, params, request_params)
         retParam['speed'] = speed_params['speed']
