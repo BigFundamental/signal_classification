@@ -38,7 +38,7 @@ class SignalMgr(object):
            'SAMPLING_DT': 0.00004,
            'SPEED_LOWER_BOUND':12300,
            'SPEED_UPPER_BOUND':15500,
-           'DEFAULT_MODEL_VERSION':'gbdt_smooth_signal'
+           'DEFAULT_MODEL_VERSION':'skew_enhance'
    }
 
    def __init__(self):

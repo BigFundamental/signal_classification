@@ -233,6 +233,13 @@ class Classifier(object):
             feature_dict['skewness_mean'] = 0
             feature_dict['skewness_delta'] = 0
 
+        # 获取波形上沿落差统计分布
+        feature_dict['skew_level_dist'] = self.getSkewLevelFeatures(raw_signals, feature_dict['peaks'])
+        feature_dict['skew_level_1'] = feature_dict['skew_level_dist'][0]
+        feature_dict['skew_level_2'] = feature_dict['skew_level_dist'][1]
+        feature_dict['skew_level_3'] = feature_dict['skew_level_dist'][2]
+        feature_dict['skew_level_4'] = feature_dict['skew_level_dist'][3]
+
         # 获取上下沿边的长度diff分位数据
         if len(feature_dict['paired_edge_height_diff']) != 0:
             if not feature_masks or 'edge_diff_10' in feature_masks:
@@ -683,3 +690,36 @@ class Classifier(object):
    #     #if pd.isna(ret):
    #     #    ret = 0
    #     return periodic_pairs
+    def plateau_point(self, raw_signals, peak_point, direction=-1):
+        def end_conditions(x, direction, signals):
+            return x >= 0 if direction < 0 else x < len(signals)
+        last_height = raw_signals[peak_point]
+        last_i = peak_point
+        next_i = peak_point + direction
+        while end_conditions(next_i, direction, raw_signals):
+            height_diff = abs(raw_signals[next_i] - last_height)
+            if height_diff < 0.04:
+                return next_i
+            last_height = raw_signals[next_i]
+            last_i = next_i
+            next_i = next_i + direction
+        return last_i
+
+    def getSkewLevelFeatures(self, raw_signal, peaks):
+        skew_level_1 = 0
+        skew_level_2 = 0
+        skew_level_3 = 0
+        skew_level_4 = 0
+        for i in peaks:
+            left_height = raw_signal[self.plateau_point(raw_signal, i - 1, -1)]
+            right_height = raw_signal[self.plateau_point(raw_signal, i - 1, 1)]
+            height_diff = abs(left_height - right_height)
+            if height_diff <= 0.02:
+                skew_level_1 += 1
+            elif height_diff <= 0.05:
+                skew_level_2 += 1
+            elif height_diff <= 0.1:
+                skew_level_3 += 1
+            else:
+                skew_level_4 += 1
+        return [skew_level_1, skew_level_2, skew_level_3, skew_level_4]
